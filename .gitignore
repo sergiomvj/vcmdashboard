@@ -14,8 +14,11 @@ build/
 Thumbs.db
 
 # IDE
-.vscode/settings.json
+.vscode/
 .idea/
+
+# VS Code workspace
+*.code-workspace
 
 # Python
 __pycache__/
