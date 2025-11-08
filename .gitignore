@@ -1,0 +1,95 @@
+# Dependencies
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+*.tmp
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Supabase
+.supabase/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Sistema Windows - arquivos específicos que estão causando problemas
+"Application Data/"
+"Cookies/"
+"Documents/My Music/"
+"Documents/My Pictures/"
+"Documents/My Videos/"
+"Local Settings/"
+"My Documents/"
+"NetHood/"
+"PrintHood/"
+"Recent/"
+"SendTo/"
+"Start Menu/"
+"Templates/"
+
+# Exclusões específicas do projeto VCM
+AUTOMACAO/output*/
+AUTOMACAO/test_*/
+vcm-dashboard/node_modules/

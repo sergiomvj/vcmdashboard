@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS simples sem classes customizadas */
+body {
+  background-color: white;
+  color: #1f2937;
+  font-family: system-ui, -apple-system, sans-serif;
+}
