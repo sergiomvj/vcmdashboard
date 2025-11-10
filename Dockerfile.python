@@ -1,0 +1,74 @@
+# VCM Backend - Dockerfile para Sistema Python
+# Inclui todos os scripts de automação, APIs e processamento
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    libpq-dev \
+    libffi-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (for Docker layer caching)
+COPY requirements.txt requirements-api.txt ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-api.txt
+
+# Install additional VCM dependencies
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    supabase \
+    openai \
+    anthropic \
+    google-generativeai \
+    python-multipart \
+    jinja2 \
+    aiofiles \
+    python-dotenv \
+    psycopg2-binary \
+    sqlalchemy \
+    alembic
+
+# Copy the entire AUTOMACAO directory and other necessary files
+COPY AUTOMACAO/ ./AUTOMACAO/
+COPY api_bridge*.py ./
+COPY vcm-backend-server.js ./
+COPY start-system.js ./
+COPY .env* ./
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/output /app/temp
+
+# Set permissions
+RUN chmod +x /app/AUTOMACAO/04_EXECUTAVEIS_BAT/* || true
+
+# Create a non-root user
+RUN useradd --create-home --shell /bin/bash vcm
+RUN chown -R vcm:vcm /app
+USER vcm
+
+# Expose API port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Default command - FastAPI server
+CMD ["python", "-m", "uvicorn", "api_bridge:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
