@@ -43,8 +43,9 @@ RUN chown -R nextjs:nodejs /app/.next
 # Switch to non-root user
 USER nextjs
 
-# Expose port
+# Expose port (matching package.json start script)
 EXPOSE 3000
+ENV PORT=3000
 
 # Start the application
 CMD ["npm", "start"]
