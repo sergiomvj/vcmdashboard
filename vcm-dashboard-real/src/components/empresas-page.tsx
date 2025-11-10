@@ -1,11 +1,105 @@
 'use client';
 
 import { useState } from 'react';
-import { useEmpresas, useDeleteEmpresa } from '@/lib/supabase-hooks';
-import { Empresa } from '@/lib/supabase';
-import { Plus, Edit, Trash2, Users, Play, Eye, Calendar, Building2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Play, Eye, Building2, Database, GitBranch } from 'lucide-react';
 import { CompanyForm } from './company-form';
 import { PersonasModal } from './personas-modal';
+import { PersonaEditModal } from './persona-edit-modal';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Mock data para demonstração
+const mockEmpresas = [
+  {
+    id: '1',
+    nome: 'TechVision Solutions',
+    industry: 'Tecnologia',
+    pais: 'Brasil',
+    descricao: 'Empresa de soluções tecnológicas inovadoras focada em transformação digital',
+    tamanho: 'media',
+    cultura: 'hibrida',
+    status: 'ativa',
+    created_at: '2024-11-01',
+    personas_count: 20,
+    scripts_executados: 3
+  },
+  {
+    id: '2',
+    nome: 'HealthCare Plus',
+    industry: 'Saúde',
+    pais: 'Estados Unidos',
+    descricao: 'Plataforma inovadora de telemedicina e gestão hospitalar',
+    tamanho: 'grande',
+    cultura: 'formal',
+    status: 'ativa',
+    created_at: '2024-10-15',
+    personas_count: 35,
+    scripts_executados: 5
+  },
+  {
+    id: '3',
+    nome: 'EduTech Academy',
+    industry: 'Educação',
+    pais: 'Canadá', 
+    descricao: 'Academia online de tecnologia com cursos interativos',
+    tamanho: 'pequena',
+    cultura: 'casual',
+    status: 'processando',
+    created_at: '2024-11-05',
+    personas_count: 12,
+    scripts_executados: 1
+  }
+];
+
+const mockPersonas = [
+  {
+    id: '1',
+    empresa_id: '1',
+    nome_completo: 'Ana Silva',
+    cargo: 'CEO',
+    categoria: 'executivos',
+    email: 'ana.silva@techvision.com',
+    status: 'ativo'
+  },
+  {
+    id: '2', 
+    empresa_id: '1',
+    nome_completo: 'Carlos Santos',
+    cargo: 'CTO',
+    categoria: 'executivos', 
+    email: 'carlos.santos@techvision.com',
+    status: 'ativo'
+  },
+  {
+    id: '3',
+    empresa_id: '1', 
+    nome_completo: 'Maria Costa',
+    cargo: 'Desenvolvedora Senior',
+    categoria: 'especialistas',
+    email: 'maria.costa@techvision.com',
+    status: 'ativo'
+  },
+  {
+    id: '4',
+    empresa_id: '2',
+    nome_completo: 'Dr. Roberto Lima',
+    cargo: 'Chief Medical Officer',
+    categoria: 'executivos',
+    email: 'roberto.lima@healthcare.com',
+    status: 'ativo'
+  },
+  {
+    id: '5',
+    empresa_id: '2',
+    nome_completo: 'Patricia Oliveira',
+    cargo: 'Tech Lead',
+    categoria: 'especialistas',
+    email: 'patricia.oliveira@healthcare.com',
+    status: 'ativo'
+  }
+];
 
 export function EmpresasPage({ 
   onEmpresaSelect, 
@@ -15,25 +109,26 @@ export function EmpresasPage({
   selectedEmpresaId?: string;
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<Empresa | null>(null);
-  const [viewingPersonas, setViewingPersonas] = useState<Empresa | null>(null);
+  const [editingCompany, setEditingCompany] = useState<any>(null);
+  const [viewingPersonas, setViewingPersonas] = useState<any>(null);
+  const [editingPersona, setEditingPersona] = useState<any>(null);
+  const [selectedEmpresa, setSelectedEmpresa] = useState<string>(mockEmpresas[0].id);
+  const [executingScript, setExecutingScript] = useState<number | null>(null);
+  const [executingCascade, setExecutingCascade] = useState(false);
   
-  const { data: companies, isLoading, error } = useEmpresas();
-  const deleteCompanyMutation = useDeleteEmpresa();
+  // Usar mock data em desenvolvimento
+  const companies = mockEmpresas;
+  const isLoading = false;
+  const error = null;
 
-  const handleEdit = (company: Empresa) => {
+  const handleEdit = (company: any) => {
     setEditingCompany(company);
     setShowForm(true);
   };
 
-  const handleDelete = async (company: Empresa) => {
+  const handleDelete = async (company: any) => {
     if (window.confirm(`Tem certeza que deseja excluir a empresa "${company.nome}"?`)) {
-      try {
-        await deleteCompanyMutation.mutateAsync(company.id);
-      } catch (error) {
-        console.error('Erro ao excluir empresa:', error);
-        alert('Erro ao excluir empresa. Tente novamente.');
-      }
+      alert('Funcionalidade de exclusão será implementada em breve.');
     }
   };
 
@@ -42,13 +137,55 @@ export function EmpresasPage({
     setEditingCompany(null);
   };
 
-  const handleViewPersonas = (company: Empresa) => {
-    setViewingPersonas(company);
+  const handleEditPersona = (persona: any) => {
+    setEditingPersona(persona);
   };
 
-  const handleExecuteScripts = (company: Empresa) => {
-    // TODO: Integrar com a API para executar scripts para esta empresa específica
-    alert(`Executar scripts para: ${company.nome}\n\nEsta funcionalidade será implementada em breve.`);
+  const handleClosePersonaEdit = () => {
+    setEditingPersona(null);
+  };
+
+  const handleSavePersona = (personaData: any) => {
+    console.log('Salvando persona:', personaData);
+    // Aqui seria implementada a lógica de salvamento
+  };
+
+  const executeScript = async (scriptId: number) => {
+    setExecutingScript(scriptId);
+    
+    try {
+      // Simular execução do script
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log(`Script ${scriptId} executado com sucesso`);
+    } catch (error) {
+      console.error(`Erro ao executar script ${scriptId}:`, error);
+    } finally {
+      setExecutingScript(null);
+    }
+  };
+
+  const executeCascade = async () => {
+    setExecutingCascade(true);
+    
+    try {
+      // Simular execução em cascata dos scripts 1-5
+      for (let i = 1; i <= 5; i++) {
+        setExecutingScript(i);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setExecutingScript(null);
+      }
+      console.log('Execução em cascata concluída com sucesso');
+    } catch (error) {
+      console.error('Erro na execução em cascata:', error);
+    } finally {
+      setExecutingCascade(false);
+      setExecutingScript(null);
+    }
+  };
+
+  const handleSelectEmpresa = (empresaId: string) => {
+    setSelectedEmpresa(empresaId);
+    onEmpresaSelect?.(empresaId);
   };
 
   const getStatusBadge = (status: string) => {
@@ -61,11 +198,14 @@ export function EmpresasPage({
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.processando;
     
     return (
-      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${config.className}`}>
+      <Badge className={config.className}>
         {config.label}
-      </span>
+      </Badge>
     );
   };
+
+  const empresaSelecionada = companies.find(e => e.id === selectedEmpresa);
+  const personasEmpresa = mockPersonas.filter(p => p.empresa_id === selectedEmpresa);
 
   if (isLoading) {
     return (
@@ -82,7 +222,7 @@ export function EmpresasPage({
           <div className="ml-3">
             <h3 className="text-sm font-medium text-red-800">Erro ao carregar empresas</h3>
             <div className="mt-2 text-sm text-red-700">
-              {error instanceof Error ? error.message : 'Erro desconhecido'}
+              Erro desconhecido
             </div>
           </div>
         </div>
@@ -96,141 +236,342 @@ export function EmpresasPage({
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Empresas Virtuais</h2>
-          <p className="text-gray-600">Gerencie suas empresas virtuais e personas</p>
+          <p className="text-gray-600">Gerencie suas empresas virtuais, personas e execute scripts</p>
         </div>
-        <button
+        <Button 
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          className="flex items-center gap-2"
         >
-          <Plus size={20} />
+          <Plus size={16} />
           Nova Empresa
-        </button>
+        </Button>
       </div>
 
-      {/* Company Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CompanyForm 
-              company={editingCompany}
-              onClose={handleCloseForm}
-            />
+      {/* Layout de 2 colunas */}
+      <div className="grid grid-cols-10 gap-6 h-[calc(100vh-200px)]">
+        
+        {/* Coluna 1: Lista de Empresas (30%) */}
+        <div className="col-span-3 bg-white rounded-lg border p-4 overflow-y-auto">
+          <div className="flex items-center gap-2 mb-4">
+            <Building2 className="h-5 w-5 text-gray-600" />
+            <h3 className="font-semibold">Empresas Cadastradas</h3>
           </div>
-        </div>
-      )}
-
-      {/* Companies List */}
-      {companies && companies.length === 0 ? (
-        <div className="text-center py-12">
-          <Building2 size={48} className="mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma empresa encontrada</h3>
-          <p className="text-gray-600 mb-4">Comece criando sua primeira empresa virtual</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            <Plus size={20} />
-            Criar Primeira Empresa
-          </button>
-        </div>
-      ) : (
-        <div className="grid gap-6">
-          {companies?.map((company: Empresa) => (
-            <div key={company.id} className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{company.nome}</h3>
-                    {getStatusBadge(company.status)}
+          
+          <div className="space-y-3">
+            {[...companies].sort((a, b) => a.nome.localeCompare(b.nome)).map((company) => (
+              <button
+                key={company.id}
+                onClick={() => handleSelectEmpresa(company.id)}
+                className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                  selectedEmpresa === company.id
+                    ? 'bg-blue-50 border-blue-200 border-2'
+                    : 'hover:bg-gray-50 border-gray-200'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{company.nome}</h4>
+                    <p className="text-sm text-gray-600">{company.industry}</p>
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">{company.industry || 'Indústria não definida'}</p>
-                  {company.descricao && (
-                    <p className="text-gray-500 text-sm">{company.descricao}</p>
-                  )}
+                  {getStatusBadge(company.status)}
                 </div>
                 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(company)}
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
-                    title="Editar"
+                <div className="text-xs text-gray-500 space-y-1">
+                  <div className="flex justify-between">
+                    <span>País:</span>
+                    <span>{company.pais}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Personas:</span>
+                    <span>{company.personas_count}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Scripts:</span>
+                    <span>{company.scripts_executados}/5</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-1 mt-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(company);
+                    }}
+                    className="h-6 px-2 text-xs"
                   >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(company)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                    title="Excluir"
+                    <Edit size={12} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(company);
+                    }}
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
                   >
-                    <Trash2 size={16} />
-                  </button>
+                    <Trash2 size={12} />
+                  </Button>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Coluna 2: Detalhes da Empresa (70%) */}
+        <div className="col-span-7 bg-white rounded-lg border p-6 overflow-y-auto">
+          {empresaSelecionada ? (
+            <div className="space-y-6">
+              {/* Header da empresa selecionada */}
+              <div className="border-b pb-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{empresaSelecionada.nome}</h2>
+                    <p className="text-gray-600 mt-1">{empresaSelecionada.descricao}</p>
+                  </div>
+                  {getStatusBadge(empresaSelecionada.status)}
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  <div className="text-sm">
+                    <span className="text-gray-500">Indústria:</span>
+                    <div className="font-medium">{empresaSelecionada.industry}</div>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-gray-500">País:</span>
+                    <div className="font-medium">{empresaSelecionada.pais}</div>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-gray-500">Tamanho:</span>
+                    <div className="font-medium capitalize">{empresaSelecionada.tamanho}</div>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-gray-500">Cultura:</span>
+                    <div className="font-medium capitalize">{empresaSelecionada.cultura}</div>
+                  </div>
                 </div>
               </div>
 
-              {/* Company Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Users size={16} className="text-gray-400" />
-                  <span className="text-gray-600">
-                    {company.total_personas} personas
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar size={16} className="text-gray-400" />
-                  <span className="text-gray-600">
-                    {new Date(company.created_at).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-                <div className="text-gray-600">
-                  CEO: {company.ceo_gender === 'masculino' ? 'Masculino' : 'Feminino'}
-                </div>
-                <div className="text-gray-600">
-                  Equipe: {((company.executives_male || 0) + (company.executives_female || 0) + 
-                           (company.assistants_male || 0) + (company.assistants_female || 0) + 
-                           (company.specialists_male || 0) + (company.specialists_female || 0))} pessoas
-                </div>
-              </div>
+              {/* Tabs de detalhes */}
+              <Tabs defaultValue="personas" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="personas" className="flex items-center gap-2">
+                    <Users size={16} />
+                    Personas
+                  </TabsTrigger>
+                  <TabsTrigger value="scripts" className="flex items-center gap-2">
+                    <Play size={16} />
+                    Scripts
+                  </TabsTrigger>
+                  <TabsTrigger value="rag" className="flex items-center gap-2">
+                    <Database size={16} />
+                    RAG
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-4 pt-4 border-t">
-                {onEmpresaSelect && (
-                  <button 
-                    onClick={() => onEmpresaSelect(company.id)}
-                    className={`flex items-center gap-2 px-3 py-1 text-sm rounded-md transition-colors ${
-                      selectedEmpresaId === company.id
-                        ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                        : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
-                    }`}
-                  >
-                    <Building2 size={14} />
-                    {selectedEmpresaId === company.id ? 'Selecionada' : 'Selecionar'}
-                  </button>
-                )}
-                <button 
-                  onClick={() => handleViewPersonas(company)}
-                  className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
-                >
-                  <Eye size={14} />
-                  Ver Personas
-                </button>
-                <button 
-                  onClick={() => handleExecuteScripts(company)}
-                  className="flex items-center gap-2 px-3 py-1 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors"
-                >
-                  <Play size={14} />
-                  Executar Scripts
-                </button>
+                <TabsContent value="personas" className="mt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Personas da Empresa</h3>
+                      <Button size="sm">
+                        <Plus size={16} className="mr-2" />
+                        Nova Persona
+                      </Button>
+                    </div>
+                    
+                    <div className="grid gap-4">
+                      {personasEmpresa.map((persona) => (
+                        <Card key={persona.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-semibold">{persona.nome_completo}</h4>
+                                <p className="text-sm text-gray-600">{persona.cargo}</p>
+                                <p className="text-xs text-gray-500">{persona.email}</p>
+                              </div>
+                              
+                              <div className="flex gap-2 flex-wrap">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditPersona(persona)}
+                                >
+                                  Bio
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditPersona(persona)}
+                                >
+                                  Competências
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditPersona(persona)}
+                                >
+                                  Tech Specs
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditPersona(persona)}
+                                >
+                                  RAG
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditPersona(persona)}
+                                >
+                                  Fluxos
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEditPersona(persona)}
+                                >
+                                  Workflows
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="scripts" className="mt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Execução de Scripts</h3>
+                      <Button 
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={executeCascade}
+                        disabled={executingCascade || executingScript !== null}
+                      >
+                        <GitBranch size={16} className="mr-2" />
+                        {executingCascade ? 'Executando Cascata...' : 'Executar Todos em Cascata'}
+                      </Button>
+                    </div>
+                    
+                    <div className="grid gap-4">
+                      {[
+                        { id: 1, nome: 'Script 1 - Gerar Biografias', status: 'concluído' },
+                        { id: 2, nome: 'Script 2 - Gerar Competências', status: 'concluído' },
+                        { id: 3, nome: 'Script 3 - Tech Specifications', status: 'concluído' },
+                        { id: 4, nome: 'Script 4 - Análise de Fluxos', status: 'pendente' },
+                        { id: 5, nome: 'Script 5 - Workflows N8N', status: 'pendente' }
+                      ].map((script) => (
+                        <Card key={script.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-semibold">{script.nome}</h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge 
+                                    variant={script.status === 'concluído' ? 'default' : 'secondary'}
+                                  >
+                                    {script.status}
+                                  </Badge>
+                                  {(executingScript === script.id || (executingCascade && executingScript === script.id)) && (
+                                    <div className="flex items-center gap-1 text-blue-600">
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                                      <span className="text-xs">Executando...</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => executeScript(script.id)}
+                                disabled={executingScript !== null || executingCascade}
+                              >
+                                <Play size={16} className="mr-2" />
+                                Executar
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="rag" className="mt-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Knowledge Base RAG</h3>
+                    
+                    <div className="grid gap-4">
+                      {personasEmpresa.map((persona) => (
+                        <Card key={persona.id}>
+                          <CardHeader>
+                            <CardTitle className="text-base">{persona.nome_completo}</CardTitle>
+                            <CardDescription>{persona.cargo}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span>Documentos RAG:</span>
+                                <Badge>12 documentos</Badge>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span>Última sincronização:</span>
+                                <span className="text-gray-500">Há 2 horas</span>
+                              </div>
+                              <Button variant="outline" size="sm" className="w-full mt-2">
+                                <Eye size={16} className="mr-2" />
+                                Visualizar RAG
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900">Selecione uma Empresa</h3>
+                <p className="text-gray-600">Escolha uma empresa na lista para visualizar seus detalhes</p>
               </div>
             </div>
-          ))}
+          )}
         </div>
+      </div>
+
+      {/* Modals */}
+      {showForm && (
+        <CompanyForm
+          company={editingCompany}
+          onClose={handleCloseForm}
+        />
       )}
 
-      <PersonasModal
-        empresa={viewingPersonas}
-        isOpen={!!viewingPersonas}
-        onClose={() => setViewingPersonas(null)}
-      />
+      {viewingPersonas && (
+        <PersonasModal
+          company={viewingPersonas}
+          onClose={() => setViewingPersonas(null)}
+        />
+      )}
+
+      {editingPersona && (
+        <PersonaEditModal
+          persona={editingPersona}
+          isOpen={!!editingPersona}
+          onClose={handleClosePersonaEdit}
+          onSave={handleSavePersona}
+        />
+      )}
     </div>
   );
 }
