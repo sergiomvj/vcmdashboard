@@ -35,7 +35,7 @@ export const useHealthCheck = () => {
     queryFn: async () => {
       const isApiAvailable = await checkApiAvailability();
       if (!isApiAvailable) {
-        return { status: 'disconnected' };
+        return { status: 'API não conectada', api_connected: false };
       }
       const response = await fetch('http://localhost:8000/health');
       return response.json();

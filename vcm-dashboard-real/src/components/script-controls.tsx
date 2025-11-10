@@ -4,17 +4,6 @@ import { useState } from 'react';
 import { useRunScript, useRunCascade } from '@/lib/hooks';
 import { Play, Loader2, CheckCircle, XCircle, Zap } from 'lucide-react';
 
-interface ScriptResult {
-  script: number;
-  status: string;
-  execution_time?: number;
-}
-
-interface CascadeResponseData {
-  scripts_executed: number;
-  results?: ScriptResult[];
-}
-
 export function ScriptControls() {
   const [showOutput, setShowOutput] = useState<{ [key: string]: boolean }>({});
   const runScriptMutation = useRunScript();
@@ -32,7 +21,7 @@ export function ScriptControls() {
 
   const scripts = [
     { id: 1, name: 'Competências', description: 'Gerar competências técnicas e comportamentais' },
-    { id: 2, name: 'Tech Specs', description: 'Especificações técnicas e arquitetura' },
+    { id: 2, name: 'Tech Specs', description: 'Especificações técnicas das personas' },
     { id: 3, name: 'RAG Database', description: 'Criar base de conhecimento RAG' },
     { id: 4, name: 'Fluxos de Análise', description: 'Análise de fluxos de trabalho' },
     { id: 5, name: 'Workflows N8N', description: 'Gerar workflows automáticos' }
@@ -137,40 +126,46 @@ export function ScriptControls() {
               </span>
             </div>
 
-            {runCascadeMutation.data.data && (() => {
-              const cascadeData = runCascadeMutation.data.data as CascadeResponseData;
+            {(() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const cascadeData = runCascadeMutation.data.data as any;
+              if (!cascadeData) return null;
+              
               return (
                 <div className="mt-3">
                   <div className="text-sm text-gray-600 mb-2">
-                    Scripts executados: {cascadeData.scripts_executed}/5
+                    Scripts executados: {cascadeData.scripts_executed || 0}/5
                   </div>
                   
-                {cascadeData.results && (
-                  <div className="space-y-1">
-                    {cascadeData.results.map((result: ScriptResult, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        {result.status === 'success' ? (
-                          <CheckCircle size={16} className="text-green-600" />
-                        ) : (
-                          <XCircle size={16} className="text-red-600" />
-                        )}
-                        <span>Script {result.script}: {result.status}</span>
-                        {result.execution_time && (
-                          <span className="text-gray-500">({result.execution_time.toFixed(2)}s)</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {cascadeData.results && (
+                    <div className="space-y-1">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(cascadeData.results as any[]).map((result: any, index: number) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          {result.status === 'success' ? (
+                            <CheckCircle size={16} className="text-green-600" />
+                          ) : (
+                            <XCircle size={16} className="text-red-600" />
+                          )}
+                          <span>Script {result.script}: {result.status}</span>
+                          {result.execution_time && (
+                            <span className="text-gray-500">({result.execution_time.toFixed(2)}s)</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                {runCascadeMutation.data.execution_time && (
-                  <div className="mt-2 text-sm text-gray-600">
-                    Tempo total: {runCascadeMutation.data.execution_time.toFixed(2)}s
-                  </div>
-                )}
-              </div>
+                  {runCascadeMutation.data.execution_time && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      Tempo total: {runCascadeMutation.data.execution_time.toFixed(2)}s
+                    </div>
+                  )}
+                </div>
               );
-            })()}            {runCascadeMutation.data.error && (
+            })()}
+
+            {runCascadeMutation.data.error && (
               <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
                 {runCascadeMutation.data.error}
               </div>

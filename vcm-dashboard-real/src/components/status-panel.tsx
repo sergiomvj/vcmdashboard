@@ -70,7 +70,8 @@ export function StatusPanel() {
     );
   }
 
-  const { execution_status } = statusData;
+  // Compatibilidade: se os dados vêm diretamente ou aninhados em execution_status
+  const execution_status = statusData.execution_status || statusData;
 
   const getStatus = (scriptStatus: ScriptStatus) => {
     if (scriptStatus.running) return 'running';
@@ -84,16 +85,18 @@ export function StatusPanel() {
       <h3 className="text-lg font-semibold mb-4">Status dos Scripts</h3>
       
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="font-medium">Gerador de Biografias</span>
-          <StatusBadge
-            status={getStatus(execution_status.biografia)}
-            label={execution_status.biografia.running ? 'Executando' : 
-                   execution_status.biografia.last_result === 'success' ? 'Concluído' :
-                   execution_status.biografia.last_result === 'error' ? 'Erro' : 'Aguardando'}
-            lastRun={execution_status.biografia.last_run}
-          />
-        </div>
+        {execution_status.biografia && (
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Gerador de Biografias</span>
+            <StatusBadge
+              status={getStatus(execution_status.biografia)}
+              label={execution_status.biografia.running ? 'Executando' : 
+                     execution_status.biografia.last_result === 'success' ? 'Concluído' :
+                     execution_status.biografia.last_result === 'error' ? 'Erro' : 'Aguardando'}
+              lastRun={execution_status.biografia.last_run}
+            />
+          </div>
+        )}
 
         <div className="border-t pt-3">
           <h4 className="font-medium mb-2">Scripts de Processamento</h4>
@@ -107,6 +110,8 @@ export function StatusPanel() {
               4: 'Fluxos de Análise',
               5: 'Workflows N8N'
             };
+
+            if (!scriptStatus) return null;
 
             return (
               <div key={num} className="flex items-center justify-between py-1">
@@ -123,22 +128,24 @@ export function StatusPanel() {
           })}
         </div>
 
-        <div className="border-t pt-3">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Cascata Completa</span>
-            <StatusBadge
-              status={getStatus(execution_status.cascade)}
-              label={execution_status.cascade.running ? 'Executando' : 
-                     execution_status.cascade.last_result === 'success' ? 'Concluída' :
-                     execution_status.cascade.last_result === 'error' ? 'Erro' : 'Aguardando'}
-              lastRun={execution_status.cascade.last_run}
-            />
+        {execution_status.cascade && (
+          <div className="border-t pt-3">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Cascata Completa</span>
+              <StatusBadge
+                status={getStatus(execution_status.cascade)}
+                label={execution_status.cascade.running ? 'Executando' : 
+                       execution_status.cascade.last_result === 'success' ? 'Concluída' :
+                       execution_status.cascade.last_result === 'error' ? 'Erro' : 'Aguardando'}
+                lastRun={execution_status.cascade.last_run}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-4 text-xs text-gray-500">
-        Última atualização: {new Date(statusData.timestamp).toLocaleString()}
+        Última atualização: {statusData.timestamp ? new Date(statusData.timestamp).toLocaleString() : 'Dados locais'}
       </div>
     </div>
   );

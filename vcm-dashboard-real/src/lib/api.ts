@@ -9,7 +9,11 @@ export interface NacionalidadePercentual {
 export interface BiografiaRequest {
   empresa_nome: string;
   empresa_industry: string;
-  nacionalidades: NacionalidadePercentual[]; // Mudança: array de nacionalidades com percentuais
+  empresa_pais: string;
+  empresa_descricao: string;
+  empresa_tamanho: 'startup' | 'pequena' | 'media' | 'grande';
+  empresa_cultura: 'formal' | 'casual' | 'hibrida';
+  nacionalidades: NacionalidadePercentual[]; // Array de nacionalidades com percentuais
   ceo_genero: string;
   executivos_homens: number;
   executivos_mulheres: number;

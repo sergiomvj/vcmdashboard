@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 """
-⚙️ SCRIPT 2 - GERADOR DE TECH SPECS
-====================================
+⚙️ SCRIPT 2 - GERADOR DE ESPECIFICAÇÕES TÉCNICAS DAS PERSONAS
+=============================================================
 
-Gera especificações técnicas de IA baseadas nas biografias e competências.
+Gera especificações técnicas de IA para cada persona baseadas em:
+- Biografias completas das personas
+- Competências e habilidades
+- Perfil de responsabilidades
 
-Input: bio/ + competencias/
-Output: tech_specs/ (configurações IA)
+OBJETIVO: Criar configurações técnicas de IA (modelos, parâmetros, ferramentas)
+         para cada persona funcionar de forma otimizada
 
-Versão: 1.0.0
+Input: 
+- bio/ (biografias das personas)
+- competencias/ (habilidades e competências) 
+Output: 
+- tech_specs/ (configurações técnicas de IA)
+
+Versão: 2.0.0
 Autor: Sergio Castro
 Data: November 2025
 """

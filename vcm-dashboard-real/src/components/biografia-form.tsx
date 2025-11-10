@@ -10,6 +10,10 @@ export function BiografiaForm() {
   const [formData, setFormData] = useState<BiografiaRequest>({
     empresa_nome: 'TechVision Solutions',
     empresa_industry: 'tecnologia',
+    empresa_pais: 'Brasil',
+    empresa_descricao: 'Empresa de soluções tecnológicas inovadoras focada em transformação digital',
+    empresa_tamanho: 'media',
+    empresa_cultura: 'hibrida',
     nacionalidades: [{ tipo: 'latinos', percentual: 100 }], // Iniciar com 100% latinos
     ceo_genero: 'feminino',
     executivos_homens: 2,
@@ -64,6 +68,39 @@ export function BiografiaForm() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium mb-1">País de Origem</label>
+            <select
+              value={formData.empresa_pais}
+              onChange={(e) => handleInputChange('empresa_pais', e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Brasil">Brasil</option>
+              <option value="Estados Unidos">Estados Unidos</option>
+              <option value="Canadá">Canadá</option>
+              <option value="Reino Unido">Reino Unido</option>
+              <option value="Alemanha">Alemanha</option>
+              <option value="França">França</option>
+              <option value="Espanha">Espanha</option>
+              <option value="Austrália">Austrália</option>
+              <option value="Japão">Japão</option>
+              <option value="Singapura">Singapura</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Descrição da Empresa</label>
+          <textarea
+            value={formData.empresa_descricao}
+            onChange={(e) => handleInputChange('empresa_descricao', e.target.value)}
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            rows={3}
+            placeholder="Descreva o propósito, missão e principais atividades da empresa..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
             <label className="block text-sm font-medium mb-1">Indústria</label>
             <select
               value={formData.empresa_industry}
@@ -75,6 +112,37 @@ export function BiografiaForm() {
               <option value="educacao">Educação</option>
               <option value="financeiro">Financeiro</option>
               <option value="marketing">Marketing</option>
+              <option value="consultoria">Consultoria</option>
+              <option value="e-commerce">E-commerce</option>
+              <option value="varejo">Varejo</option>
+              <option value="manufatura">Manufatura</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Tamanho da Empresa</label>
+            <select
+              value={formData.empresa_tamanho}
+              onChange={(e) => handleInputChange('empresa_tamanho', e.target.value as any)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="startup">Startup (2-10 funcionários)</option>
+              <option value="pequena">Pequena (11-50 funcionários)</option>
+              <option value="media">Média (51-250 funcionários)</option>
+              <option value="grande">Grande (250+ funcionários)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Cultura Organizacional</label>
+            <select
+              value={formData.empresa_cultura}
+              onChange={(e) => handleInputChange('empresa_cultura', e.target.value as any)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="formal">Formal</option>
+              <option value="casual">Casual</option>
+              <option value="hibrida">Híbrida</option>
             </select>
           </div>
         </div>
