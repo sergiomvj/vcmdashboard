@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-🎯 GERADOR AUTOMÁTICO DE BIOGRAFIAS DE PERSONAS
-===============================================
+GERADOR AUTOMATICO DE BIOGRAFIAS DE PERSONAS
+=============================================
 
 Gera biografias completas e detalhadas automaticamente baseado nos 
 parâmetros demográficos e configurações da empresa.
@@ -12,15 +13,36 @@ Data: November 2025
 """
 
 import os
+import sys
 import json
 import random
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Set
+
+# Configurar encoding para Windows - versão simplificada
+if sys.platform.startswith('win'):
+    # Configurar para UTF-8 se possível
+    try:
+        import locale
+        locale.setlocale(locale.LC_ALL, '')
+    except:
+        pass
+    
+    # Reconfigurar stdout/stderr para evitar problemas de encoding
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except:
+        pass
 
 class AutoBiografiaGenerator:
     def __init__(self):
         """Inicializar gerador automático de biografias"""
+        
+        # Controle de nomes únicos - NOVA FUNCIONALIDADE
+        self.nomes_usados: Set[str] = set()
+        self.combinacoes_usadas: Set[tuple] = set()
         
         # Configurações demográficas
         self.nacionalidades = {
@@ -108,6 +130,9 @@ class AutoBiografiaGenerator:
         
     def generate_personas_config(self, company_config: Dict) -> Dict:
         """Gera configuração completa de personas baseado nos parâmetros"""
+        
+        # Reset nomes para nova empresa - NOVA FUNCIONALIDADE
+        self.reset_nomes_usados()
         
         # Extrair configurações
         nacionalidade = company_config.get("nacionalidade", "latinos")
@@ -215,25 +240,68 @@ class AutoBiografiaGenerator:
             )
             personas_config["especialistas"][f"especialista_{especialidade}"] = espec_persona
         
+        # Log final com estatísticas de nomes únicos - NOVA FUNCIONALIDADE
+        print(f"\nGeracao concluida - {len(self.nomes_usados)} nomes unicos criados!")
+        print(f"Total de combinacoes unicas: {len(self.combinacoes_usadas)}")
+        
         return personas_config
+    
+    def reset_nomes_usados(self):
+        """Reset o controle de nomes para uma nova empresa"""
+        self.nomes_usados.clear()
+        self.combinacoes_usadas.clear()
+        print(f"Reset do controle de nomes unicos")
+    
+    def generate_unique_name(self, genero: str, nacionalidade: str, max_attempts: int = 50) -> Tuple[str, str, str]:
+        """
+        Gera um nome único que não foi usado ainda na empresa
+        """
+        nac_data = self.nacionalidades.get(nacionalidade, self.nacionalidades["latinos"])
+        
+        for attempt in range(max_attempts):
+            # Selecionar nome baseado no gênero
+            if genero == "masculino":
+                primeiro_nome = random.choice(nac_data["nomes_masculinos"])
+            else:
+                primeiro_nome = random.choice(nac_data["nomes_femininos"])
+            
+            sobrenome = random.choice(nac_data["sobrenomes"])
+            nome_completo = f"{primeiro_nome} {sobrenome}"
+            
+            # Verificar se a combinação não foi usada
+            combinacao = (primeiro_nome, sobrenome, nacionalidade)
+            
+            if nome_completo not in self.nomes_usados and combinacao not in self.combinacoes_usadas:
+                # Marcar como usado
+                self.nomes_usados.add(nome_completo)
+                self.combinacoes_usadas.add(combinacao)
+                return primeiro_nome, sobrenome, nome_completo
+        
+        # Se não conseguiu gerar um nome único, adiciona sufixo
+        base_nome = f"{primeiro_nome} {sobrenome}"
+        for i in range(1, 100):
+            nome_com_sufixo = f"{primeiro_nome} {sobrenome} {chr(65+i)}"  # A, B, C...
+            if nome_com_sufixo not in self.nomes_usados:
+                self.nomes_usados.add(nome_com_sufixo)
+                return primeiro_nome, f"{sobrenome} {chr(65+i)}", nome_com_sufixo
+        
+        # Fallback final
+        timestamp = str(int(datetime.now().timestamp()))[-3:]
+        nome_final = f"{primeiro_nome} {sobrenome}{timestamp}"
+        self.nomes_usados.add(nome_final)
+        return primeiro_nome, f"{sobrenome}{timestamp}", nome_final
     
     def generate_persona_bio(self, role: str, categoria: str, genero: str, 
                            nacionalidade: str, idiomas: List[str], 
                            company_config: Dict, is_ceo: bool = False,
                            especialidade: str = None) -> Dict:
-        """Gera biografia completa de uma persona"""
+        """Gera biografia completa de uma persona com nome único"""
+        
+        # Gerar nome único - MELHORADO!
+        primeiro_nome, sobrenome, nome_completo = self.generate_unique_name(genero, nacionalidade)
         
         # Dados demográficos da nacionalidade
         nac_data = self.nacionalidades.get(nacionalidade, self.nacionalidades["latinos"])
-        
-        # Gerar nome
-        if genero == "masculino":
-            primeiro_nome = random.choice(nac_data["nomes_masculinos"])
-        else:
-            primeiro_nome = random.choice(nac_data["nomes_femininos"])
-            
-        sobrenome = random.choice(nac_data["sobrenomes"])
-        nome_completo = f"{primeiro_nome} {sobrenome}"
         
         # Gerar idade baseada no role
         if is_ceo:
@@ -319,19 +387,19 @@ class AutoBiografiaGenerator:
         # Determinar pronome
         genero_pronome = "ele" if any(x in nome.lower() for x in ["joão", "carlos", "diego", "luis", "ahmed", "erik"]) else "ela"
         
-        biografia = f"""# 👤 {nome}
+        biografia = f"""# {nome}
 
-## 📋 **INFORMAÇÕES BÁSICAS**
+## INFORMACOES BASICAS
 - **Nome:** {nome}
 - **Idade:** {idade} anos
 - **Nacionalidade:** {pais}
 - **Cargo:** {role}
-- **Especialização:** {especializacao}
+- **Especializacao:** {especializacao}
 
-## 🎓 **FORMAÇÃO ACADÊMICA**
+## FORMACAO ACADEMICA
 {educacao}
 
-## 💼 **EXPERIÊNCIA PROFISSIONAL**
+## EXPERIENCIA PROFISSIONAL
 Com {experiencia} anos de experiência na área de {especializacao.lower()}, {nome} traz uma perspectiva única e valiosa para a {empresa_nome}. 
 
 Ao longo de sua carreira, {genero_pronome} desenvolveu competências sólidas em:
@@ -341,10 +409,10 @@ Ao longo de sua carreira, {genero_pronome} desenvolveu competências sólidas em
 - Análise e otimização de resultados
 - Comunicação executiva eficaz
 
-## 🌍 **COMPETÊNCIAS LINGUÍSTICAS**
+## COMPETENCIAS LINGUISTICAS
 **Idiomas:** {', '.join(idiomas)}
 
-## 🎯 **RESPONSABILIDADES NA {empresa_nome.upper()}**
+## RESPONSABILIDADES NA {empresa_nome.upper()}
 Como {role}, {nome} é responsável por:
 - Suporte direto às operações estratégicas da empresa
 - Coordenação de atividades relacionadas à {especializacao.lower()}
@@ -352,14 +420,14 @@ Como {role}, {nome} é responsável por:
 - Colaboração com equipes internas e stakeholders externos
 - Desenvolvimento e execução de iniciativas de crescimento
 
-## 💡 **COMPETÊNCIAS TÉCNICAS**
+## COMPETENCIAS TECNICAS
 - Domínio de ferramentas de gestão empresarial
 - Conhecimento avançado em metodologias ágeis
 - Experiência com sistemas de CRM e ERP
 - Análise de dados e KPIs
 - Gestão de projetos complexos
 
-## 🤝 **COMPETÊNCIAS COMPORTAMENTAIS**
+## COMPETENCIAS COMPORTAMENTAIS
 - Liderança inspiradora e colaborativa
 - Comunicação assertiva e empática
 - Adaptabilidade e flexibilidade
@@ -367,7 +435,7 @@ Como {role}, {nome} é responsável por:
 - Orientação para resultados
 - Trabalho em equipe multicultural
 
-## 📈 **OBJETIVOS E METAS**
+## OBJETIVOS E METAS
 {nome} está focado(a) em contribuir para o crescimento sustentável da {empresa_nome}, aplicando sua experiência em {especializacao.lower()} para:
 - Otimizar processos e aumentar a eficiência operacional
 - Desenvolver soluções inovadoras para desafios do setor de {industria}
@@ -418,19 +486,20 @@ Como {role}, {nome} é responsável por:
                     with open(bio_file, 'w', encoding='utf-8') as f:
                         f.write(persona["biografia_md"])
                         
-                    print(f"   ✅ {categoria.capitalize()}: {persona['nome_completo']}")
+                    print(f"   {categoria.capitalize()}: {persona['nome_completo']}")
         
         # Salvar configuração JSON
         config_file = output_path / "personas_config.json"
         with open(config_file, 'w', encoding='utf-8') as f:
             json.dump(personas_config, f, ensure_ascii=False, indent=2)
             
-        print(f"\n📋 Configuração salva em: {config_file}")
+        print(f"\nConfiguracao salva em: {config_file}")
+        print(f"Total de nomes unicos gerados: {len(self.nomes_usados)}")
 
 def main():
     """Função principal para teste do gerador"""
     
-    print("🎯 GERADOR AUTOMÁTICO DE BIOGRAFIAS DE PERSONAS")
+    print("GERADOR AUTOMATICO DE BIOGRAFIAS DE PERSONAS")
     print("=" * 60)
     
     generator = AutoBiografiaGenerator()
@@ -450,20 +519,21 @@ def main():
         "idiomas_extras": ["alemão", "japonês"]
     }
     
-    print("📋 Configuração de teste:")
+    print("Configuracao de teste:")
     for key, value in company_config.items():
         print(f"   {key}: {value}")
     
-    print("\n🔄 Gerando personas...")
+    print("\nGerando personas...")
     personas_config = generator.generate_personas_config(company_config)
     
-    print(f"\n✅ {len([p for cat in personas_config.values() if isinstance(cat, dict) for p in cat.values()]) + (1 if 'ceo' in personas_config else 0)} personas geradas!")
+    total_personas = len([p for cat in personas_config.values() if isinstance(cat, dict) for p in cat.values()]) + (1 if 'ceo' in personas_config else 0)
+    print(f"\n{total_personas} personas geradas!")
     
     # Salvar em pasta de teste
     test_output = Path("test_biografias_output")
     generator.save_personas_biografias(personas_config, test_output)
     
-    print(f"\n🎉 Biografias salvas em: {test_output}")
+    print(f"\nBiografias salvas em: {test_output}")
 
 if __name__ == "__main__":
     main()

@@ -11,6 +11,7 @@ Funcionalidades:
 - Executar cascata de scripts (1-5)
 - Verificar status dos scripts
 - Sincronizar dados com Supabase
+- Ingestão RAG no Supabase
 
 Autor: Sergio Castro
 Data: November 2025
@@ -27,6 +28,21 @@ import json
 import asyncio
 from pathlib import Path
 import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Import RAG service
+try:
+    rag_path = Path(__file__).parent / "AUTOMACAO" / "02_PROCESSAMENTO_PERSONAS"
+    sys.path.append(str(rag_path))
+    from rag_ingestion_service import ingest_empresa_rag, get_rag_status
+    RAG_AVAILABLE = True
+    logger.info("✅ RAG service carregado com sucesso")
+except ImportError as e:
+    logger.warning(f"⚠️ RAG service não disponível: {e}")
+    RAG_AVAILABLE = False
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -378,6 +394,193 @@ async def list_script_outputs(empresa_codigo: str):
             success=False,
             message="Erro ao listar outputs",
             error=str(e)
+
+# ========================================
+# 🧠 RAG ENDPOINTS
+# ========================================
+
+class RAGRequest(BaseModel):
+    empresa_id: str
+    force_update: Optional[bool] = False
+
+class RAGResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+@app.post("/api/rag/ingest", response_model=RAGResponse)
+async def ingest_rag_data(request: RAGRequest, background_tasks: BackgroundTasks):
+    """
+    🧠 Ingerir dados RAG para uma empresa
+    
+    Processa biografias, competências, workflows e knowledge base
+    da empresa para o sistema RAG no Supabase.
+    """
+    try:
+        logger.info(f"🚀 Iniciando ingestão RAG para empresa: {request.empresa_id}")
+        
+        if not RAG_AVAILABLE:
+            return RAGResponse(
+                success=False,
+                message="Serviço RAG não disponível",
+                error="RAG service não está carregado"
+            )
+        
+        # Executar ingestão em background
+        def run_rag_ingestion():
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(
+                    ingest_empresa_rag(request.empresa_id, request.force_update)
+                )
+                logger.info(f"✅ Ingestão RAG concluída: {result}")
+                return result
+            except Exception as e:
+                logger.error(f"❌ Erro na ingestão RAG: {e}")
+                raise e
+            finally:
+                loop.close()
+        
+        # Executar em background
+        background_tasks.add_task(run_rag_ingestion)
+        
+        return RAGResponse(
+            success=True,
+            message=f"Ingestão RAG iniciada para empresa {request.empresa_id}",
+            data={
+                "empresa_id": request.empresa_id,
+                "force_update": request.force_update,
+                "status": "started"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Erro em ingest_rag_data: {str(e)}")
+        return RAGResponse(
+            success=False,
+            message="Erro ao iniciar ingestão RAG",
+            error=str(e)
+        )
+
+@app.get("/api/rag/status/{empresa_id}", response_model=RAGResponse)
+async def get_rag_status_endpoint(empresa_id: str):
+    """
+    📊 Obter status da ingestão RAG de uma empresa
+    
+    Retorna informações sobre jobs recentes, estatísticas
+    e última sincronização RAG.
+    """
+    try:
+        logger.info(f"📊 Consultando status RAG para empresa: {empresa_id}")
+        
+        if not RAG_AVAILABLE:
+            return RAGResponse(
+                success=False,
+                message="Serviço RAG não disponível",
+                error="RAG service não está carregado"
+            )
+        
+        # Obter status RAG
+        status_data = get_rag_status(empresa_id)
+        
+        if 'error' in status_data:
+            return RAGResponse(
+                success=False,
+                message="Erro ao obter status RAG",
+                error=status_data['error']
+            )
+        
+        return RAGResponse(
+            success=True,
+            message="Status RAG obtido com sucesso",
+            data={
+                "empresa_id": empresa_id,
+                **status_data
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Erro em get_rag_status_endpoint: {str(e)}")
+        return RAGResponse(
+            success=False,
+            message="Erro ao consultar status RAG",
+            error=str(e)
+        )
+
+@app.post("/api/rag/ingest-sync", response_model=RAGResponse)
+async def ingest_rag_data_sync(request: RAGRequest):
+    """
+    🧠 Ingerir dados RAG de forma síncrona
+    
+    Versão síncrona da ingestão RAG para casos onde
+    é necessário aguardar o resultado.
+    """
+    try:
+        logger.info(f"🔄 Ingestão RAG síncrona para empresa: {request.empresa_id}")
+        
+        if not RAG_AVAILABLE:
+            return RAGResponse(
+                success=False,
+                message="Serviço RAG não disponível",
+                error="RAG service não está carregado"
+            )
+        
+        # Executar ingestão síncrona
+        result = await ingest_empresa_rag(request.empresa_id, request.force_update)
+        
+        return RAGResponse(
+            success=True,
+            message="Ingestão RAG concluída com sucesso",
+            data=result
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Erro em ingest_rag_data_sync: {str(e)}")
+        return RAGResponse(
+            success=False,
+            message="Erro na ingestão RAG síncrona",
+            error=str(e)
+        )
+
+@app.get("/api/rag/health")
+async def rag_health_check():
+    """
+    ❤️ Verificar saúde do serviço RAG
+    """
+    try:
+        health_status = {
+            "rag_available": RAG_AVAILABLE,
+            "timestamp": str(asyncio.get_event_loop().time()),
+            "status": "healthy" if RAG_AVAILABLE else "rag_service_unavailable"
+        }
+        
+        if RAG_AVAILABLE:
+            # Verificar conexão Supabase através do serviço RAG
+            try:
+                from rag_ingestion_service import rag_service
+                has_supabase = rag_service.supabase is not None
+                health_status["supabase_connected"] = has_supabase
+                health_status["status"] = "healthy" if has_supabase else "supabase_disconnected"
+            except Exception as e:
+                health_status["supabase_connected"] = False
+                health_status["supabase_error"] = str(e)
+                health_status["status"] = "supabase_error"
+        
+        return {
+            "success": True,
+            "message": "Health check concluído",
+            "data": health_status
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro em rag_health_check: {str(e)}")
+        return {
+            "success": False,
+            "message": "Erro no health check RAG",
+            "error": str(e)
+        }
         )
 
 if __name__ == "__main__":
