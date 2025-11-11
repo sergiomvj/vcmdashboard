@@ -1,4 +1,4 @@
-# VCM Dashboard - FIXED Dockerfile with all dependencies
+# VCM Dashboard - FIXED Dockerfile with correct start command
 FROM node:20-alpine
 
 WORKDIR /app
@@ -33,5 +33,5 @@ EXPOSE 3000
 # Health check
 HEALTHCHECK CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application
-CMD ["npm", "start"]
+# Use the correct command for standalone build
+CMD ["node", ".next/standalone/server.js"]
