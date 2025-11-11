@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Ação não reconhecida' }, { status: 400 });
     }
 
-    return new Promise((resolve) => {
+    return new Promise<NextResponse>((resolve) => {
       const pythonProcess = spawn('python', [scriptPath, ...args], {
         cwd: path.dirname(scriptPath),
         env: process.env,
