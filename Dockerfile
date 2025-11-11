@@ -1,10 +1,10 @@
-# VCM Dashboard - Ultra Simple Dockerfile
+# VCM Dashboard - Maximum Debug Dockerfile
 FROM node:20-alpine
 
 WORKDIR /app
 
 # Install dependencies first
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat curl
 
 # Accept build arguments
 ARG VCM_SUPABASE_URL
@@ -18,14 +18,36 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
 
 # Copy package files and install
 COPY vcm-dashboard-real/package*.json ./
-RUN npm install
+
+# Debug: Check package.json
+RUN echo "=== PACKAGE.JSON CHECK ===" && cat package.json && echo "=== END PACKAGE.JSON ==="
+
+# Install dependencies
+RUN npm install --verbose
 
 # Copy all source files
 COPY vcm-dashboard-real/ ./
 
-# Build with more verbose output and error handling
-RUN echo "Starting build..." && \
-    npm run build || (echo "Build failed! Here's what we have:" && ls -la && echo "Package.json:" && cat package.json && exit 1)
+# Debug: Check what files we have
+RUN echo "=== FILES CHECK ===" && \
+    ls -la && \
+    echo "=== SRC STRUCTURE ===" && \
+    find src -type f -name "*.ts" -o -name "*.tsx" | head -20 && \
+    echo "=== ENV VARIABLES ===" && \
+    env | grep -E "(NODE|NEXT|VCM)" && \
+    echo "=== DEBUG END ==="
+
+# Try to run Next.js build with maximum debug
+RUN echo "=== STARTING BUILD ===" && \
+    npx next build --debug || \
+    (echo "=== BUILD FAILED - DETAILED DEBUG ===" && \
+     echo "Node version:" && node --version && \
+     echo "NPM version:" && npm --version && \
+     echo "Next.js installation:" && npm list next && \
+     echo "TypeScript check:" && npx tsc --noEmit --skipLibCheck || echo "TypeScript check failed" && \
+     echo "ESLint check:" && npx eslint --version || echo "ESLint not found" && \
+     echo "Directory contents:" && ls -la .next || echo "No .next directory" && \
+     exit 1)
 
 EXPOSE 3000
 
