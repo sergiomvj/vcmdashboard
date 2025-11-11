@@ -40,14 +40,8 @@ RUN npm run build
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the standalone output and set permissions
-RUN cp -r .next/standalone/* . && \
-    cp -r .next/static .next/ && \
-    cp -r public . && \
-    chown -R nextjs:nodejs /app
-
-# Clean up build artifacts to reduce image size
-RUN rm -rf .next/cache node_modules/.cache
+# Set correct permissions for the build output
+RUN chown -R nextjs:nodejs /app
 
 # Switch to non-root user  
 USER nextjs
@@ -57,5 +51,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Start the application using standalone server
-CMD ["node", "server.js"]
+# Start the application using npm start (simpler and more reliable)
+CMD ["npm", "start"]
