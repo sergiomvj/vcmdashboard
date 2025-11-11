@@ -1,58 +1,36 @@
-# VCM Dashboard - Optimized Dockerfile for Easypanel
-FROM node:20-alpine AS builder
+# VCM Dashboard - Ultra Simple Dockerfile
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies first
 RUN apk add --no-cache libc6-compat
-
-# Copy package files
-COPY vcm-dashboard-real/package*.json ./
-
-# Install dependencies
-RUN npm ci --omit=dev --ignore-scripts
 
 # Accept build arguments
 ARG VCM_SUPABASE_URL
 ARG VCM_SUPABASE_ANON_KEY
 
-# Set environment variables for build
+# Set environment variables
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_SUPABASE_URL=$VCM_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
 
-# Copy source code
-COPY vcm-dashboard-real/ .
+# Copy package files and install
+COPY vcm-dashboard-real/package*.json ./
+RUN npm install
 
-# Build application
-RUN npm run build
+# Copy all source files
+COPY vcm-dashboard-real/ ./
 
-# Runtime stage
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-# Install curl for health checks
-RUN apk add --no-cache curl && \
-    addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-
-# Set environment
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Copy built app
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-
-USER nextjs
+# Build with more verbose output and error handling
+RUN echo "Starting build..." && \
+    npm run build || (echo "Build failed! Here's what we have:" && ls -la && echo "Package.json:" && cat package.json && exit 1)
 
 EXPOSE 3000
 
 # Simple health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
+HEALTHCHECK CMD curl -f http://localhost:3000/api/health || exit 1
 
-CMD ["node", "server.js"]
+# Start the application
+CMD ["npm", "start"]
