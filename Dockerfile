@@ -1,4 +1,4 @@
-# VCM Dashboard - Simplified Dockerfile for Debugging
+# VCM Dashboard - Fixed Dockerfile
 FROM node:20-alpine
 
 # Set working directory
@@ -30,20 +30,18 @@ ENV NEXT_PUBLIC_SUPABASE_URL=$VCM_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
 ENV SUPABASE_SERVICE_ROLE_KEY=$VCM_SUPABASE_SERVICE_ROLE_KEY
 
-# Build the application
-RUN npm run build
+# Clean any existing build and build fresh
+RUN rm -rf .next && npm run build
 
 # Debug: Show what was built
 RUN echo "Build contents:" && ls -la .next/
 
-# Expose port
+# Expose port (but let Easypanel control the actual port)
 EXPOSE 3000
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
 
-# Add health check to help debug
+# Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+    CMD curl -f http://localhost:${PORT:-3000}/ || exit 1
 
-# Start with debugging info
-CMD ["sh", "-c", "echo 'Starting VCM Dashboard...' && echo 'Environment:' && env | grep -E '(NODE_|NEXT_|PORT|HOSTNAME)' && echo 'Starting npm...' && npm start"]
+# Use dynamic port from environment, fallback to 3000
+CMD ["sh", "-c", "echo 'Starting VCM Dashboard on port '${PORT:-3000}'...' && echo 'Environment:' && env | grep -E '(NODE_|NEXT_|PORT)' && npx next start -p ${PORT:-3000}"]
