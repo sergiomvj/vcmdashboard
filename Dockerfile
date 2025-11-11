@@ -1,47 +1,58 @@
-# VCM Dashboard - Fixed Dockerfile
-FROM node:20-alpine
+# VCM Dashboard - Optimized Dockerfile for Easypanel
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
 # Install dependencies
-RUN apk add --no-cache libc6-compat curl
+RUN apk add --no-cache libc6-compat
 
 # Copy package files
-COPY package*.json ./
+COPY vcm-dashboard-real/package*.json ./
 
 # Install dependencies
-RUN npm ci
-
-# Copy source code
-COPY . .
+RUN npm ci --omit=dev --ignore-scripts
 
 # Accept build arguments
 ARG VCM_SUPABASE_URL
 ARG VCM_SUPABASE_ANON_KEY
-ARG VCM_SUPABASE_SERVICE_ROLE_KEY
-ARG OPENAI_API_KEY
-ARG GOOGLE_AI_API_KEY
 
 # Set environment variables for build
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_SUPABASE_URL=$VCM_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
-ENV SUPABASE_SERVICE_ROLE_KEY=$VCM_SUPABASE_SERVICE_ROLE_KEY
 
-# Clean any existing build and build fresh
-RUN rm -rf .next && npm run build
+# Copy source code
+COPY vcm-dashboard-real/ .
 
-# Debug: Show what was built
-RUN echo "Build contents:" && ls -la .next/
+# Build application
+RUN npm run build
 
-# Expose port (but let Easypanel control the actual port)
+# Runtime stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl && \
+    addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Set environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Copy built app
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+USER nextjs
+
 EXPOSE 3000
 
-# Add health check
+# Simple health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-3000}/ || exit 1
+    CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Use dynamic port from environment, fallback to 3000
-CMD ["sh", "-c", "echo 'Starting VCM Dashboard on port '${PORT:-3000}'...' && echo 'Environment:' && env | grep -E '(NODE_|NEXT_|PORT)' && npx next start -p ${PORT:-3000}"]
+CMD ["node", "server.js"]
