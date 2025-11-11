@@ -38,8 +38,9 @@ RUN npm install --include=dev
 # Copy all source files
 COPY vcm-dashboard-real/ ./
 
-# Copy Python automation scripts (optional - will enable full functionality if present)
-COPY AUTOMACAO/ ../AUTOMACAO/ || echo "No AUTOMACAO folder found - using mock mode"
+# Note: AUTOMACAO scripts not included - using mock mode for APIs
+# To enable full Python functionality, uncomment and ensure AUTOMACAO/ exists:
+# COPY AUTOMACAO/ ../AUTOMACAO/
 
 # Build the application
 RUN npm run build
