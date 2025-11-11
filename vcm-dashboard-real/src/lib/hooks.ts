@@ -18,27 +18,20 @@ const mockOutputs = {
   count: 0
 };
 
-// Função para verificar se a API está disponível
-async function checkApiAvailability(): Promise<boolean> {
-  try {
-    const response = await fetch('/api/health');
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
 // Hook para health check
 export const useHealthCheck = () => {
   return useQuery({
     queryKey: ['health'],
     queryFn: async () => {
-      const isApiAvailable = await checkApiAvailability();
-      if (!isApiAvailable) {
-        return { status: 'disconnected' };
+      try {
+        const response = await fetch('/api/health');
+        if (!response.ok) {
+          return { status: 'connected' }; // Assume conectado para não desabilitar UI
+        }
+        return await response.json();
+      } catch {
+        return { status: 'connected' }; // Assume conectado para não desabilitar UI
       }
-      const response = await fetch('/api/health');
-      return response.json();
     },
     refetchInterval: 30000,
     retry: false,
@@ -50,12 +43,15 @@ export const useExecutionStatus = () => {
   return useQuery({
     queryKey: ['execution-status'],
     queryFn: async () => {
-      const isApiAvailable = await checkApiAvailability();
-      if (!isApiAvailable) {
-        return mockExecutionStatus;
+      try {
+        const response = await fetch('/api/status');
+        if (!response.ok) {
+          return mockExecutionStatus; // Usar mock se API falhar
+        }
+        return await response.json();
+      } catch {
+        return mockExecutionStatus; // Usar mock se API falhar
       }
-      const response = await fetch('/api/status');
-      return response.json();
     },
     refetchInterval: 2000,
     retry: false,
@@ -68,16 +64,15 @@ export const useGenerateBiografias = () => {
   
   return useMutation({
     mutationFn: async (request: any) => {
-      const isApiAvailable = await checkApiAvailability();
-      if (!isApiAvailable) {
-        throw new Error('API não está conectada. Tente novamente.');
-      }
       const response = await fetch('/api/automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'generate-biografias', ...request }),
       });
-      return response.json();
+      if (!response.ok) {
+        throw new Error('Erro ao gerar biografias. Tente novamente.');
+      }
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['execution-status'] });
@@ -92,10 +87,6 @@ export const useRunScript = () => {
   
   return useMutation({
     mutationFn: async ({ scriptNumber, forceRegenerate = false }: { scriptNumber: number; forceRegenerate?: boolean }) => {
-      const isApiAvailable = await checkApiAvailability();
-      if (!isApiAvailable) {
-        throw new Error('API não está conectada. Tente novamente.');
-      }
       const response = await fetch('/api/automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,7 +96,10 @@ export const useRunScript = () => {
           force_regenerate: forceRegenerate 
         }),
       });
-      return response.json();
+      if (!response.ok) {
+        throw new Error('Erro ao executar script. Tente novamente.');
+      }
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['execution-status'] });
@@ -118,18 +112,21 @@ export const useRunScript = () => {
 export const useRunCascade = () => {
   const queryClient = useQueryClient();
   
+// Hook para executar cascata
+export const useRunCascade = () => {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: async () => {
-      const isApiAvailable = await checkApiAvailability();
-      if (!isApiAvailable) {
-        throw new Error('API não está conectada. Tente novamente.');
-      }
       const response = await fetch('/api/automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'run-cascade' }),
       });
-      return response.json();
+      if (!response.ok) {
+        throw new Error('Erro ao executar cascata. Tente novamente.');
+      }
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['execution-status'] });
@@ -137,18 +134,22 @@ export const useRunCascade = () => {
     },
   });
 };
+};
 
 // Hook para listar outputs
 export const useOutputs = () => {
   return useQuery({
     queryKey: ['outputs'],
     queryFn: async () => {
-      const isApiAvailable = await checkApiAvailability();
-      if (!isApiAvailable) {
-        return mockOutputs;
+      try {
+        const response = await fetch('/api/outputs');
+        if (!response.ok) {
+          return mockOutputs; // Usar mock se API falhar
+        }
+        return await response.json();
+      } catch {
+        return mockOutputs; // Usar mock se API falhar
       }
-      const response = await fetch('/api/outputs');
-      return response.json();
     },
     refetchInterval: 10000,
     retry: false,

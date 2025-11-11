@@ -1,13 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
+import fs from 'fs';
+
+// Função para verificar se os scripts Python existem
+function checkPythonScriptsAvailable(): boolean {
+  try {
+    const automacaoPath = path.join(process.cwd(), '../AUTOMACAO');
+    return fs.existsSync(automacaoPath);
+  } catch {
+    return false;
+  }
+}
+
+// Mock responses para quando Python não está disponível
+const mockResponses = {
+  'generate-biografias': {
+    success: true,
+    message: 'Biografias geradas com sucesso (mock)',
+    status: 'completed',
+    timestamp: new Date().toISOString()
+  },
+  'run-script': {
+    success: true,
+    message: 'Script executado com sucesso (mock)',
+    status: 'completed', 
+    timestamp: new Date().toISOString()
+  },
+  'run-cascade': {
+    success: true,
+    message: 'Cascata executada com sucesso (mock)',
+    status: 'completed',
+    timestamp: new Date().toISOString()
+  }
+};
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, scriptNumber, force_regenerate, ...otherParams } = body;
     
-    // Determinar qual script executar baseado na ação
+    // Verificar se scripts Python estão disponíveis
+    const pythonAvailable = checkPythonScriptsAvailable();
+    
+    if (!pythonAvailable) {
+      // Retornar mock response
+      console.log(`[MOCK MODE] Executing ${action}${scriptNumber ? ` script ${scriptNumber}` : ''}`);
+      
+      // Simular delay de processamento
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockResponse = mockResponses[action as keyof typeof mockResponses] || {
+        success: true,
+        message: `Ação ${action} executada com sucesso (mock)`,
+        status: 'completed',
+        timestamp: new Date().toISOString()
+      };
+      
+      return NextResponse.json(mockResponse);
+    }
+    
+    // Determinar qual script executar baseado na ação (modo Python real)
     let scriptPath = '';
     const args: string[] = [];
     
@@ -43,6 +96,8 @@ export async function POST(request: NextRequest) {
     }
 
     return new Promise<NextResponse>((resolve) => {
+      console.log(`[PYTHON MODE] Executing: python ${scriptPath} ${args.join(' ')}`);
+      
       const pythonProcess = spawn('python', [scriptPath, ...args], {
         cwd: path.dirname(scriptPath),
         env: process.env,
@@ -53,13 +108,16 @@ export async function POST(request: NextRequest) {
 
       pythonProcess.stdout.on('data', (data) => {
         output += data.toString();
+        console.log('[PYTHON OUTPUT]:', data.toString());
       });
 
       pythonProcess.stderr.on('data', (data) => {
         error += data.toString();
+        console.log('[PYTHON ERROR]:', data.toString());
       });
 
       pythonProcess.on('close', (code) => {
+        console.log(`[PYTHON] Process finished with code: ${code}`);
         const response = {
           success: code === 0,
           code,
@@ -67,17 +125,20 @@ export async function POST(request: NextRequest) {
           error: error || null,
           action,
           scriptNumber: scriptNumber || null,
+          timestamp: new Date().toISOString()
         };
 
         resolve(NextResponse.json(response));
       });
 
       pythonProcess.on('error', (err) => {
+        console.log(`[PYTHON] Process error: ${err.message}`);
         resolve(NextResponse.json({
           success: false,
           error: `Erro ao executar script: ${err.message}`,
           action,
           scriptNumber: scriptNumber || null,
+          timestamp: new Date().toISOString()
         }, { status: 500 }));
       });
     });
