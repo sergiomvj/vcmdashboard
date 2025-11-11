@@ -29,10 +29,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -r requirements-api.txt
 
-# Install additional VCM dependencies
+# Install essential VCM dependencies
 RUN pip install --no-cache-dir \
     fastapi \
-    uvicorn \
+    uvicorn[standard] \
     supabase \
     openai \
     anthropic \
@@ -43,32 +43,52 @@ RUN pip install --no-cache-dir \
     python-dotenv \
     psycopg2-binary \
     sqlalchemy \
-    alembic
+    alembic \
+    requests \
+    pydantic
 
-# Copy the entire AUTOMACAO directory and other necessary files
-COPY AUTOMACAO/ ./AUTOMACAO/
-COPY api_bridge*.py ./
-COPY vcm-backend-server.js ./
-COPY start-system.js ./
-COPY .env* ./
+# Copy application files
+COPY . .
+
+# Remove problematic files that may not exist in all environments
+RUN rm -f start-system.js vcm-backend-server.js || true
+
+# Accept build arguments for environment variables
+ARG VCM_SUPABASE_URL
+ARG VCM_SUPABASE_ANON_KEY
+ARG VCM_SUPABASE_SERVICE_ROLE_KEY
+ARG OPENAI_API_KEY
+ARG GOOGLE_AI_API_KEY
+ARG LIFEWAY_SUPABASE_URL
+ARG LIFEWAY_SUPABASE_SERVICE_KEY
+
+# Set environment variables
+ENV VCM_SUPABASE_URL=$VCM_SUPABASE_URL
+ENV VCM_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
+ENV VCM_SUPABASE_SERVICE_ROLE_KEY=$VCM_SUPABASE_SERVICE_ROLE_KEY
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+ENV GOOGLE_AI_API_KEY=$GOOGLE_AI_API_KEY
+ENV LIFEWAY_SUPABASE_URL=$LIFEWAY_SUPABASE_URL
+ENV LIFEWAY_SUPABASE_SERVICE_KEY=$LIFEWAY_SUPABASE_SERVICE_KEY
 
 # Create necessary directories
 RUN mkdir -p /app/logs /app/output /app/temp
 
-# Set permissions
-RUN chmod +x /app/AUTOMACAO/04_EXECUTAVEIS_BAT/* || true
+# Set permissions for scripts
+RUN find /app -name "*.py" -exec chmod +x {} \; || true
+RUN find /app -name "*.sh" -exec chmod +x {} \; || true
 
 # Create a non-root user
 RUN useradd --create-home --shell /bin/bash vcm
 RUN chown -R vcm:vcm /app
 USER vcm
 
-# Expose API port
+# Expose API port (but let Easypanel control actual port)
 EXPOSE 8000
 
-# Health check
+# Health check with dynamic port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Default command - FastAPI server
-CMD ["python", "-m", "uvicorn", "api_bridge:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Start with dynamic port support
+CMD ["sh", "-c", "echo 'Starting VCM Backend API on port '${PORT:-8000}'...' && python -m uvicorn api_bridge:app --host 0.0.0.0 --port ${PORT:-8000}"]

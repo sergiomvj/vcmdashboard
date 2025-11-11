@@ -51,9 +51,20 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="VCM Dashboard API Bridge", version="1.0.0")
 
 # Configurar CORS para permitir conexões do React
+allowed_origins = [
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    # Adicionar origens de produção dinamicamente
+]
+
+# Em produção, permitir todas as origens ou configurar via environment
+if os.getenv("VCM_ENVIRONMENT", "development") == "production":
+    allowed_origins = ["*"]  # Em produção, pode ser mais específico
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
