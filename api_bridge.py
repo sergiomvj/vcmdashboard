@@ -405,6 +405,7 @@ async def list_script_outputs(empresa_codigo: str):
             success=False,
             message="Erro ao listar outputs",
             error=str(e)
+        )
 
 # ========================================
 # 🧠 RAG ENDPOINTS
@@ -592,7 +593,6 @@ async def rag_health_check():
             "message": "Erro no health check RAG",
             "error": str(e)
         }
-        )
 
 if __name__ == "__main__":
     import uvicorn
