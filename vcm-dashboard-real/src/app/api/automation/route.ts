@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     
     // Determinar qual script executar baseado na ação
     let scriptPath = '';
-    let args: string[] = [];
+    const args: string[] = [];
     
     switch (action) {
       case 'generate-biografias':
