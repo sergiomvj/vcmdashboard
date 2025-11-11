@@ -1,19 +1,16 @@
-# VCM Dashboard - Dockerfile with Standalone Output
+# VCM Dashboard - Simplified Dockerfile for Debugging
 FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
 # Install dependencies
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat curl
 
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies initially
-RUN npm ci --only=production && npm cache clean --force
-
-# Install dev dependencies for build
+# Install dependencies
 RUN npm ci
 
 # Copy source code
@@ -33,23 +30,20 @@ ENV NEXT_PUBLIC_SUPABASE_URL=$VCM_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
 ENV SUPABASE_SERVICE_ROLE_KEY=$VCM_SUPABASE_SERVICE_ROLE_KEY
 
-# Build the application (generates standalone output)
+# Build the application
 RUN npm run build
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Set correct permissions for the build output
-RUN chown -R nextjs:nodejs /app
-
-# Switch to non-root user  
-USER nextjs
+# Debug: Show what was built
+RUN echo "Build contents:" && ls -la .next/
 
 # Expose port
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Start the application using npm start (simpler and more reliable)
-CMD ["npm", "start"]
+# Add health check to help debug
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/ || exit 1
+
+# Start with debugging info
+CMD ["sh", "-c", "echo 'Starting VCM Dashboard...' && echo 'Environment:' && env | grep -E '(NODE_|NEXT_|PORT|HOSTNAME)' && echo 'Starting npm...' && npm start"]
