@@ -21,7 +21,7 @@ const mockOutputs = {
 // Função para verificar se a API está disponível
 async function checkApiAvailability(): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:8000/health');
+    const response = await fetch('/api/health');
     return response.ok;
   } catch {
     return false;
@@ -37,7 +37,7 @@ export const useHealthCheck = () => {
       if (!isApiAvailable) {
         return { status: 'disconnected' };
       }
-      const response = await fetch('http://localhost:8000/health');
+      const response = await fetch('/api/health');
       return response.json();
     },
     refetchInterval: 30000,
@@ -54,7 +54,7 @@ export const useExecutionStatus = () => {
       if (!isApiAvailable) {
         return mockExecutionStatus;
       }
-      const response = await fetch('http://localhost:8000/status');
+      const response = await fetch('/api/status');
       return response.json();
     },
     refetchInterval: 2000,
@@ -70,12 +70,12 @@ export const useGenerateBiografias = () => {
     mutationFn: async (request: any) => {
       const isApiAvailable = await checkApiAvailability();
       if (!isApiAvailable) {
-        throw new Error('API não está conectada. Inicie o servidor backend na porta 8000.');
+        throw new Error('API não está conectada. Tente novamente.');
       }
-      const response = await fetch('http://localhost:8000/generate-biografias', {
+      const response = await fetch('/api/automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
+        body: JSON.stringify({ action: 'generate-biografias', ...request }),
       });
       return response.json();
     },
@@ -94,12 +94,16 @@ export const useRunScript = () => {
     mutationFn: async ({ scriptNumber, forceRegenerate = false }: { scriptNumber: number; forceRegenerate?: boolean }) => {
       const isApiAvailable = await checkApiAvailability();
       if (!isApiAvailable) {
-        throw new Error('API não está conectada. Inicie o servidor backend na porta 8000.');
+        throw new Error('API não está conectada. Tente novamente.');
       }
-      const response = await fetch(`http://localhost:8000/run-script/${scriptNumber}`, {
+      const response = await fetch('/api/automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ force_regenerate: forceRegenerate }),
+        body: JSON.stringify({ 
+          action: 'run-script', 
+          scriptNumber, 
+          force_regenerate: forceRegenerate 
+        }),
       });
       return response.json();
     },
@@ -118,10 +122,12 @@ export const useRunCascade = () => {
     mutationFn: async () => {
       const isApiAvailable = await checkApiAvailability();
       if (!isApiAvailable) {
-        throw new Error('API não está conectada. Inicie o servidor backend na porta 8000.');
+        throw new Error('API não está conectada. Tente novamente.');
       }
-      const response = await fetch('http://localhost:8000/run-cascade', {
+      const response = await fetch('/api/automation', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'run-cascade' }),
       });
       return response.json();
     },
@@ -141,7 +147,7 @@ export const useOutputs = () => {
       if (!isApiAvailable) {
         return mockOutputs;
       }
-      const response = await fetch('http://localhost:8000/outputs');
+      const response = await fetch('/api/outputs');
       return response.json();
     },
     refetchInterval: 10000,

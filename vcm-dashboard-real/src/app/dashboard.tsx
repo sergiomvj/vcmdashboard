@@ -137,7 +137,7 @@ export default function Dashboard() {
           <div className="text-center text-gray-500 text-sm">
             <p>VCM Dashboard - Interface Real para execução de scripts Python</p>
             <p className="mt-1">
-              API Backend: <span className="font-mono">http://localhost:8000</span> | 
+              Integrated API | 
               Frontend: <span className="font-mono">http://localhost:3001</span>
             </p>
           </div>

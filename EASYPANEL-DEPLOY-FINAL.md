@@ -28,13 +28,13 @@ Dockerfile: Dockerfile.python
 ### 🔧 **PASSO 3: Environment Variables**
 ```bash
 # VCM SUPABASE (CENTRAL)
-VCM_SUPABASE_URL=https://fzyokrvdyeczhfqlwxzb.supabase.co
-VCM_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6eW9rcnZkeWVjemhmcWx3eHpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDQzMzAsImV4cCI6MjA3ODA4MDMzMH0.mf3TC1PxNd9pe9M9o-D_lgqZunUl0kPumS0tU4oKodY
-VCM_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6eW9rcnZkeWVjemhmcWx3eHpiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjUwNDMzMCwiZXhwIjoyMDc4MDgwMzMwfQ.TC-actKumOMt40yBUM-SBMubqB0sasZWfz5G78ARriE
+VCM_SUPABASE_URL=your-vcm-supabase-url
+VCM_SUPABASE_ANON_KEY=your-vcm-anon-key
+VCM_SUPABASE_SERVICE_ROLE_KEY=your-vcm-service-role-key
 
 # LIFEWAY SUPABASE (RAG DATABASE)
-LIFEWAY_SUPABASE_URL=https://neaoblaycbdunfxgunjo.supabase.co
-LIFEWAY_SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lYW9ibGF5Y2JkdW5meGd1bmpvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjI2OTE2MCwiZXhwIjoyMDc3ODQ1MTYwfQ.iUcrv6uVxfy3_YCN1h7BGPdUBXD6EATeWAOEe6x8VMs
+LIFEWAY_SUPABASE_URL=your-lifeway-supabase-url
+LIFEWAY_SUPABASE_SERVICE_KEY=your-lifeway-service-key
 
 # APIs
 OPENAI_API_KEY=your-openai-api-key-here
