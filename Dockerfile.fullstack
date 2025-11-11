@@ -1,0 +1,54 @@
+# 🎪 Dockerfile Full-Stack - Frontend + Backend em um container
+# Builda o Next.js e serve com FastAPI
+
+# Stage 1: Build Frontend
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app/frontend
+
+# Copiar arquivos do Next.js
+COPY package*.json ./
+COPY next.config.mjs ./
+COPY tsconfig.json ./
+COPY tailwind.config.ts ./
+COPY postcss.config.mjs ./
+COPY src/ ./src/
+
+# Instalar dependências e buildar
+RUN npm ci --only=production
+RUN npm run build
+RUN npm run export || npm run build  # Gerar arquivos estáticos
+
+# Stage 2: Python Backend + Frontend servido
+FROM python:3.11-slim
+WORKDIR /app
+
+# Instalar dependências do sistema
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements e instalar dependências Python
+COPY requirements-api.txt ./
+RUN pip install --no-cache-dir -r requirements-api.txt
+
+# Copiar arquivos Python
+COPY api_bridge.py ./
+COPY api_bridge_real.py ./
+COPY vcm_fullstack_server.py ./
+COPY AUTOMACAO/ ./AUTOMACAO/
+
+# Copiar build do frontend do stage anterior
+COPY --from=frontend-builder /app/frontend/out ./out
+COPY --from=frontend-builder /app/frontend/.next/static ./.next/static
+
+# Variáveis de ambiente
+ENV PORT=8000
+ENV NODE_ENV=production
+ENV VCM_ENVIRONMENT=production
+
+# Expor porta
+EXPOSE $PORT
+
+# Comando de inicialização
+CMD ["python", "vcm_fullstack_server.py"]

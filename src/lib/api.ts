@@ -1,5 +1,5 @@
-// API client para comunicar com FastAPI backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// API client para comunicar com FastAPI backend ou Next.js API routes
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';  // Empty for same-origin requests
 
 export interface NacionalidadePercentual {
   tipo: string;

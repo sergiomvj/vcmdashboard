@@ -21,8 +21,17 @@ const mockOutputs = {
 // Função para verificar se a API está disponível
 async function checkApiAvailability(): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:8000/health');
-    return response.ok;
+    // Tentar API local primeiro (Next.js API routes)
+    const response = await fetch('/api/health');
+    if (response.ok) return true;
+    
+    // Fallback para API externa se configurada
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      const externalResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`);
+      return externalResponse.ok;
+    }
+    
+    return false;
   } catch {
     return false;
   }
@@ -33,12 +42,35 @@ export const useHealthCheck = () => {
   return useQuery({
     queryKey: ['health'],
     queryFn: async () => {
-      const isApiAvailable = await checkApiAvailability();
-      if (!isApiAvailable) {
-        return { status: 'disconnected' };
+      // Tentar API local primeiro
+      try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+          return await response.json();
+        }
+      } catch (error) {
+        console.warn('API local não disponível:', error);
       }
-      const response = await fetch('http://localhost:8000/health');
-      return response.json();
+      
+      // Fallback para API externa se configurada
+      if (process.env.NEXT_PUBLIC_API_URL) {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`);
+          if (response.ok) {
+            return await response.json();
+          }
+        } catch (error) {
+          console.warn('API externa não disponível:', error);
+        }
+      }
+      
+      // Retornar status de desenvolvimento
+      return {
+        status: 'development',
+        message: 'Funcionando com dados simulados',
+        timestamp: new Date().toISOString(),
+        mode: 'next-api-routes'
+      };
     },
     refetchInterval: 30000,
     retry: false,
