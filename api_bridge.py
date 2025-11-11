@@ -28,6 +28,7 @@ import json
 import asyncio
 from pathlib import Path
 import logging
+from datetime import datetime
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -99,6 +100,34 @@ SCRIPT_PATHS = {
     "fluxos": AUTOMACAO_DIR / "02_PROCESSAMENTO_PERSONAS" / "04_generate_fluxos_analise.py",
     "workflows": AUTOMACAO_DIR / "02_PROCESSAMENTO_PERSONAS" / "05_generate_workflows_n8n.py",
 }
+
+# ========================================
+# 🏥 HEALTH CHECK ENDPOINTS
+# ========================================
+
+@app.get("/health")
+async def health_check():
+    """
+    🏥 Health check básico para verificar se a API está funcionando
+    """
+    return {
+        "status": "healthy",
+        "message": "VCM API is running",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
+    }
+
+@app.get("/")
+async def root():
+    """
+    🏠 Endpoint raiz com informações da API
+    """
+    return {
+        "message": "VCM Dashboard API Bridge",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/health"
+    }
 
 def run_python_script(script_path: Path, args: List[str] = None) -> Dict[str, Any]:
     """
