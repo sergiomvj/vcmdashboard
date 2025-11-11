@@ -22,13 +22,11 @@ const nextConfig = {
     unoptimized: process.env.NODE_ENV === 'development'
   },
   
-  // Enable experimental features for better performance
-  experimental: {
-    // Enable modern build optimizations
-    optimizeCss: true,
-    // Improve cold start performance
-    webpackBuildWorker: true,
-  },
+  // Disable experimental features for stable build
+  // experimental: {
+  //   optimizeCss: true,
+  //   webpackBuildWorker: true,
+  // },
   
   // Webpack optimizations
   webpack: (config, { isServer }) => {
