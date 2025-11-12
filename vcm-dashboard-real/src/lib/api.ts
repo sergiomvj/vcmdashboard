@@ -1,6 +1,5 @@
-// API client para comunicar com FastAPI backend
-// Base URL para APIs locais (Next.js API Routes)
-const API_BASE_URL = '';
+// API client para comunicar com FastAPI backend ou Next.js API routes
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';  // Empty for same-origin requests
 
 export interface NacionalidadePercentual {
   tipo: string;
@@ -8,6 +7,7 @@ export interface NacionalidadePercentual {
 }
 
 export interface BiografiaRequest {
+  empresa_codigo?: string;
   empresa_nome: string;
   empresa_industry: string;
   empresa_pais: string;

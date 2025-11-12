@@ -1,76 +1,106 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { readdir, stat } from 'fs/promises';
 import path from 'path';
 
+/**
+ * 📁 API Route para listar outputs dos scripts
+ */
 export async function GET() {
   try {
-    // Verificar se existe a pasta de outputs
-    const outputsPath = path.join(process.cwd(), '../AUTOMACAO');
-    
-    let outputs: Array<{
-      name: string;
-      path: string;
-      size: number;
-      created_at: string;
-      modified_at: string;
-    }> = [];
-    
+    const outputs = {
+      files: [] as any[],
+      directories: [] as any[],
+      count: 0,
+      last_updated: new Date().toISOString()
+    };
+
+    // Tentar ler outputs reais se existirem
     try {
-      // Tentar listar arquivos de output reais
-      const directories = [
-        '../AUTOMACAO/01_SETUP_E_CRIACAO/test_biografias_output',
-        '../AUTOMACAO/02_PROCESSAMENTO_PERSONAS/competencias_output',
-        '../AUTOMACAO/04_PERSONAS_COMPLETAS'
+      const outputDirs = [
+        'AUTOMACAO/04_PERSONAS_COMPLETAS',
+        'AUTOMACAO/competencias_output', 
+        'AUTOMACAO/06_RAG_KNOWLEDGE_BASE',
+        'AUTOMACAO/01_SETUP_E_CRIACAO/test_biografias_output'
       ];
-      
-      for (const dir of directories) {
-        const fullPath = path.join(process.cwd(), dir);
-        if (fs.existsSync(fullPath)) {
-          const files = fs.readdirSync(fullPath);
-          files.forEach(file => {
-            const filePath = path.join(fullPath, file);
-            const stat = fs.statSync(filePath);
-            if (stat.isFile()) {
-              outputs.push({
-                name: file,
-                path: dir,
-                size: stat.size,
-                created_at: stat.birthtime.toISOString(),
-                modified_at: stat.mtime.toISOString()
+
+      for (const dir of outputDirs) {
+        const dirPath = path.join(process.cwd(), dir);
+        
+        try {
+          const items = await readdir(dirPath);
+          
+          for (const item of items) {
+            const itemPath = path.join(dirPath, item);
+            const itemStat = await stat(itemPath);
+            
+            if (itemStat.isFile() && (item.endsWith('.json') || item.endsWith('.md'))) {
+              outputs.files.push({
+                name: item,
+                path: dir + '/' + item,
+                size: itemStat.size,
+                modified: itemStat.mtime.toISOString(),
+                type: item.endsWith('.json') ? 'json' : 'markdown'
+              });
+            } else if (itemStat.isDirectory()) {
+              outputs.directories.push({
+                name: item,
+                path: dir + '/' + item,
+                modified: itemStat.mtime.toISOString()
               });
             }
-          });
+          }
+        } catch (dirError) {
+          console.warn(`⚠️ Diretório ${dir} não encontrado:`, dirError);
         }
       }
-    } catch (error) {
-      console.log('Erro ao listar arquivos reais, usando dados mock');
-    }
 
-    // Se não encontrou arquivos, usar dados mock
-    if (outputs.length === 0) {
-      outputs = [
+      outputs.count = outputs.files.length + outputs.directories.length;
+
+    } catch (fsError) {
+      console.warn('⚠️ Erro ao ler sistema de arquivos, usando dados simulados:', fsError);
+      
+      // Fallback para dados simulados
+      outputs.files = [
         {
-          name: 'biografias_exemplo.json',
-          path: 'test_biografias_output',
-          size: 2048,
-          created_at: new Date().toISOString(),
-          modified_at: new Date().toISOString()
+          name: 'lifeway_personas.json',
+          path: 'AUTOMACAO/04_PERSONAS_COMPLETAS/lifeway_personas.json',
+          size: 45678,
+          modified: new Date(Date.now() - 3600000).toISOString(),
+          type: 'json'
+        },
+        {
+          name: 'competencias_output.json', 
+          path: 'AUTOMACAO/competencias_output/competencias_output.json',
+          size: 12345,
+          modified: new Date(Date.now() - 7200000).toISOString(),
+          type: 'json'
         }
       ];
+      
+      outputs.directories = [
+        {
+          name: 'executivos',
+          path: 'AUTOMACAO/04_PERSONAS_COMPLETAS/executivos',
+          modified: new Date(Date.now() - 86400000).toISOString()
+        }
+      ];
+      
+      outputs.count = outputs.files.length + outputs.directories.length;
     }
 
     return NextResponse.json({
-      outputs,
-      count: outputs.length
+      success: true,
+      message: 'Outputs listados com sucesso',
+      data: outputs
     });
 
   } catch (error) {
-    console.error('Erro ao listar outputs:', error);
+    console.error('❌ Erro ao listar outputs:', error);
     return NextResponse.json(
       { 
-        outputs: [],
-        count: 0,
-        error: 'Erro ao acessar outputs'
+        success: false, 
+        message: 'Erro ao listar outputs', 
+        error: String(error) 
       },
       { status: 500 }
     );

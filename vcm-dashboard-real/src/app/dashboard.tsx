@@ -5,6 +5,7 @@ import { useHealthCheck } from '@/lib/hooks';
 import { StatusPanel } from '@/components/status-panel';
 import { BiografiaForm } from '@/components/biografia-form';
 import { ScriptControls } from '@/components/script-controls';
+import { ScriptsNodeJSPage } from '@/components/scripts-nodejs-page';
 import { OutputsPanel } from '@/components/outputs-panel';
 import { RAGPanel } from '@/components/rag-panel';
 import { TabNavigation, TabType } from '@/components/tab-navigation';
@@ -12,7 +13,7 @@ import { EmpresasPage } from '@/components/empresas-page';
 import { ConfiguracoesPage } from '@/components/configuracoes-page';
 import { ObjetivosMetas } from '@/components/ObjetivosMetas';
 import { AuditoriaSystem } from '@/components/AuditoriaSystem';
-import { Activity, AlertTriangle, CheckCircle, Target, Shield } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
@@ -27,24 +28,23 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900" style={{color: '#111827'}}>VCM Dashboard</h1>
-              <p className="text-gray-600" style={{color: '#4B5563'}}>Virtual Company Manager - Interface Real</p>
-              <p className="text-xs text-gray-400" style={{color: '#9CA3AF'}}>Build: {new Date().toISOString().slice(0,16)}</p>
+              <h1 className="text-2xl font-bold text-gray-900">VCM Dashboard</h1>
+              <p className="text-gray-600">Virtual Company Manager - Interface Real</p>
             </div>
             
             <div className="flex items-center gap-3">
               {healthLoading ? (
-                <div className="flex items-center gap-2 text-gray-500" style={{color: '#6B7280'}}>
+                <div className="flex items-center gap-2 text-gray-500">
                   <Activity size={20} className="animate-pulse" />
                   <span>Verificando...</span>
                 </div>
               ) : healthData && healthData.status === 'healthy' ? (
-                <div className="flex items-center gap-2 text-green-600" style={{color: '#059669'}}>
+                <div className="flex items-center gap-2 text-green-600">
                   <CheckCircle size={20} />
                   <span>API Conectada</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-blue-600" style={{color: '#2563EB'}}>
+                <div className="flex items-center gap-2 text-blue-600">
                   <AlertTriangle size={20} />
                   <span>Modo Desenvolvimento</span>
                 </div>
@@ -90,13 +90,21 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {activeTab === 'dashboard' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Coluna Principal */}
             <div className="lg:col-span-2 space-y-8">
+              {/* Painel de Status Geral */}
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg">
+                <h2 className="text-2xl font-bold mb-2">Dashboard Principal</h2>
+                <p className="text-blue-100">
+                  Visão geral do sistema VCM - Para executar scripts Node.js, use a aba &quot;Scripts Node.js&quot;
+                </p>
+              </div>
+              
               {/* Formulário de Biografias */}
               <BiografiaForm />
               
-              {/* Controles de Scripts */}
+              {/* Controles de Scripts (Python - Legacy) */}
               <ScriptControls />
               
               {/* Sistema RAG */}
@@ -112,6 +120,10 @@ export default function Dashboard() {
               <OutputsPanel />
             </div>
           </div>
+        )}
+
+        {activeTab === 'scripts-nodejs' && (
+          <ScriptsNodeJSPage />
         )}
 
         {activeTab === 'empresas' && (
@@ -138,7 +150,7 @@ export default function Dashboard() {
           <div className="text-center text-gray-500 text-sm">
             <p>VCM Dashboard - Interface Real para execução de scripts Python</p>
             <p className="mt-1">
-              Integrated API | 
+              API Backend: <span className="font-mono">http://localhost:8000</span> | 
               Frontend: <span className="font-mono">http://localhost:3001</span>
             </p>
           </div>

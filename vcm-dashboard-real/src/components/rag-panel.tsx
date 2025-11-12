@@ -59,7 +59,7 @@ export function RAGPanel() {
     setIsIngesting(true);
 
     try {
-      const response = await fetch('/api/rag/ingest', {
+      const response = await fetch('http://localhost:8000/api/rag/ingest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ export function RAGPanel() {
         // Aguardar um pouco e tentar obter o resultado
         setTimeout(async () => {
           try {
-            const syncResponse = await fetch('/api/rag/ingest-sync', {
+            const syncResponse = await fetch('http://localhost:8000/api/rag/ingest-sync', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ export function RAGPanel() {
     setIsLoadingStatus(true);
 
     try {
-      const response = await fetch(`/api/rag/status/${empresaId}`);
+      const response = await fetch(`http://localhost:8000/api/rag/status/${empresaId}`);
       const result = await response.json();
 
       if (result.success) {

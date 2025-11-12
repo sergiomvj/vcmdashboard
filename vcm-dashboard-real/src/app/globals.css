@@ -3,114 +3,46 @@
 @tailwind utilities;
 
 :root {
-  --background: 255 255 255; /* white */
-  --foreground: 23 23 23; /* dark gray */
-  --card: 255 255 255;
-  --card-foreground: 23 23 23;
-  --primary: 59 130 246; /* blue-500 */
-  --primary-foreground: 255 255 255;
-  --secondary: 243 244 246; /* gray-100 */
-  --secondary-foreground: 23 23 23;
-  --muted: 249 250 251; /* gray-50 */
-  --muted-foreground: 107 114 128; /* gray-500 */
-  --accent: 243 244 246;
-  --accent-foreground: 23 23 23;
-  --border: 229 231 235; /* gray-200 */
-  --input: 229 231 235;
-  --ring: 59 130 246;
-  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #171717;
 }
 
-/* Force light theme for production */
-.light {
-  --background: 255 255 255;
-  --foreground: 23 23 23;
-  --card: 255 255 255;
-  --card-foreground: 23 23 23;
-  --primary: 59 130 246;
-  --primary-foreground: 255 255 255;
-  --secondary: 243 244 246;
-  --secondary-foreground: 23 23 23;
-  --muted: 249 250 251;
-  --muted-foreground: 107 114 128;
-  --accent: 243 244 246;
-  --accent-foreground: 23 23 23;
-  --border: 229 231 235;
-  --input: 229 231 235;
-  --ring: 59 130 246;
-}
-
+/* Força modo claro sempre - sobrescreve dark mode */
 * {
-  border-color: hsl(var(--border));
+  color-scheme: light;
 }
 
-/* FORCE LIGHT THEME - ULTIMATE OVERRIDE */
-html, body {
-  background-color: #ffffff !important;
-  color: #171717 !important;
+html {
+  color-scheme: light;
 }
 
 body {
   color: #171717 !important;
   background: #ffffff !important;
-  font-family: Arial, Helvetica, sans-serif !important;
+  font-family: Arial, Helvetica, sans-serif;
+  color-scheme: light;
 }
 
-/* NUCLEAR OPTION - Force ALL elements to have proper colors */
-* {
-  color: #374151 !important;
+/* Garante que textos sejam sempre escuros */
+h1, h2, h3, h4, h5, h6, p, span, div {
+  color: inherit;
 }
 
-/* Headers and important text */
-h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold, .font-medium {
-  color: #111827 !important;
-}
-
-/* Regular text */
-p, span, div, li, td, th {
-  color: #4B5563 !important;
-}
-
-/* Buttons */
-button, .btn {
-  color: #111827 !important;
-}
-
-/* Links */
-a {
-  color: #2563EB !important;
-}
-
-/* Status indicators - preserve their intended colors */
-.text-green-600, .text-green-500 {
-  color: #059669 !important;
-}
-
-.text-blue-600, .text-blue-500 {
-  color: #2563EB !important;
-}
-
-.text-red-600, .text-red-500 {
-  color: #DC2626 !important;
-}
-
-.text-yellow-600, .text-yellow-500 {
-  color: #D97706 !important;
-}
-
-/* Backgrounds */
+/* Reset de dark mode para componentes específicos */
 .bg-white {
   background-color: #ffffff !important;
 }
 
-.bg-gray-50 {
-  background-color: #f9fafb !important;
+.text-gray-700 {
+  color: #374151 !important;
 }
 
-/* Cards and panels */
-.rounded-lg, .rounded, .border {
-  background-color: #ffffff !important;
-  border-color: #e5e7eb !important;
+.text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.text-gray-500 {
+  color: #6b7280 !important;
 }
 
 @layer utilities {

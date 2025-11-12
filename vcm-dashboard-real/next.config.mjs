@@ -1,36 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove standalone for now - might be causing issues
-  // output: 'standalone',
-  
-  // Force cache busting
-  generateEtags: false,
-  
   // Disable x-powered-by header for security
   poweredByHeader: false,
   
-  // Disable ESLint during build for production (warnings become errors)
+  // ESLint configuration for production builds
   eslint: {
     ignoreDuringBuilds: true,
   },
   
-  // Disable TypeScript errors during build (for faster production builds)
+  // TypeScript configuration for production builds
   typescript: {
     ignoreBuildErrors: true,
-  },
-  
-  // Server configuration
-  async rewrites() {
-    return [
-      {
-        source: '/health',
-        destination: '/api/health',
-      },
-      {
-        source: '/status',
-        destination: '/api/status',
-      },
-    ]
   },
   
   // Optimize images
@@ -39,11 +19,13 @@ const nextConfig = {
     unoptimized: process.env.NODE_ENV === 'development'
   },
   
-  // Disable experimental features for stable build
-  // experimental: {
-  //   optimizeCss: true,
-  //   webpackBuildWorker: true,
-  // },
+  // Enable experimental features for better performance
+  experimental: {
+    // Enable modern build optimizations
+    optimizeCss: true,
+    // Improve cold start performance
+    webpackBuildWorker: true,
+  },
   
   // Webpack optimizations
   webpack: (config, { isServer }) => {

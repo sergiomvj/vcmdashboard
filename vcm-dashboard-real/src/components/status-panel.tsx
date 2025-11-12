@@ -1,7 +1,7 @@
 'use client';
 
 import { useExecutionStatus } from '@/lib/hooks';
-import { CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Activity } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface StatusBadgeProps {
   status: 'running' | 'success' | 'error' | 'idle' | 'pending';
@@ -30,7 +30,7 @@ function StatusBadge({ status, label, lastRun }: StatusBadgeProps) {
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${color}`}>
       <Icon size={16} className={spin ? 'animate-spin' : ''} />
-      <span style={{color: 'inherit'}}>{label}</span>
+      <span>{label}</span>
       {lastRun && (
         <span className="text-xs opacity-75">
           {new Date(lastRun).toLocaleTimeString()}
@@ -47,117 +47,105 @@ interface ScriptStatus {
 }
 
 export function StatusPanel() {
-  const { data: statusData, isLoading, error } = useExecutionStatus();
+  const { data: statusData, isLoading } = useExecutionStatus();
 
-  // Show loading state
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-4">
-        <div className="flex items-center gap-2 text-gray-600 mb-3">
-          <Activity size={20} />
-          <h3 className="font-medium" style={{color: '#374151'}}>Status dos Scripts</h3>
-        </div>
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="animate-spin text-gray-400" size={32} />
-          <span className="ml-2 text-gray-500" style={{color: '#6B7280'}}>Carregando status...</span>
+      <div className="bg-white rounded-lg border p-6">
+        <h3 className="text-lg font-semibold mb-4">Status dos Scripts</h3>
+        <div className="flex items-center gap-2">
+          <Loader2 size={20} className="animate-spin" />
+          <span>Carregando status...</span>
         </div>
       </div>
     );
   }
 
-  // Use mock data if no real data available
-  const mockData = {
-    biografia: { running: false, last_run: null, last_result: 'success' },
-    script_1: { running: false, last_run: null, last_result: 'idle' },
-    script_2: { running: false, last_run: null, last_result: 'idle' },
-    script_3: { running: false, last_run: null, last_result: 'idle' },
-    script_4: { running: false, last_run: null, last_result: 'idle' },
-    script_5: { running: false, last_run: null, last_result: 'idle' },
-    cascade: { running: false, last_run: null, last_result: 'idle' },
-  };
+  if (!statusData) {
+    return (
+      <div className="bg-white rounded-lg border p-6">
+        <h3 className="text-lg font-semibold mb-4">Status dos Scripts</h3>
+        <div className="text-red-600">Erro ao carregar status</div>
+      </div>
+    );
+  }
 
-  const status = statusData || mockData;
-  
-  // Detect if using real data or mock
-  const isUsingRealData = statusData?._debug?.status === 'API_WORKING_REAL';
-  const companiesCount = statusData?._debug?.empresas_count || 0;
+  // Compatibilidade: se os dados vêm diretamente ou aninhados em execution_status
+  const execution_status = statusData.execution_status || statusData;
 
-  const getScriptStatus = (script: ScriptStatus): 'running' | 'success' | 'error' | 'idle' | 'pending' => {
-    if (script.running) return 'running';
-    if (script.last_result === 'success') return 'success';
-    if (script.last_result === 'error') return 'error';
+  const getStatus = (scriptStatus: ScriptStatus) => {
+    if (scriptStatus.running) return 'running';
+    if (scriptStatus.last_result === 'success') return 'success';
+    if (scriptStatus.last_result === 'error') return 'error';
     return 'idle';
   };
 
   return (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="flex items-center gap-2 text-gray-600 mb-3">
-        <Activity size={20} />
-        <h3 className="font-medium" style={{color: '#374151'}}>Status dos Scripts</h3>
-      </div>
+    <div className="bg-white rounded-lg border p-6">
+      <h3 className="text-lg font-semibold mb-4">Status dos Scripts</h3>
       
-      {/* Indicador de Modo de Dados */}
-      <div className={`mb-4 p-2 rounded text-xs ${isUsingRealData 
-        ? 'bg-green-50 text-green-700 border border-green-200' 
-        : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}>
-        {isUsingRealData ? (
-          <div className="flex items-center gap-2">
-            <CheckCircle size={14} />
-            <span>📊 <strong>Dados Reais Conectados</strong> - {companiesCount} empresa(s) no Supabase</span>
+      <div className="space-y-3">
+        {/* Biografia Script */}
+        {execution_status.biografia && (
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span className="text-sm font-medium">Biografia</span>
+            </div>
+            <StatusBadge
+              status={getStatus(execution_status.biografia)}
+              label={execution_status.biografia.last_result === 'success' ? 'OK' : 'Aguardando'}
+              lastRun={execution_status.biografia.last_run}
+            />
           </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={14} />
-            <span>🔧 <strong>Modo Mock</strong> - Dados simulados (API desconectada)</span>
+        )}
+
+        {/* Scripts 1-5 */}
+        {[1, 2, 3, 4, 5].map((num) => {
+          const scriptKey = `script_${num}` as keyof typeof execution_status;
+          const scriptStatus = execution_status[scriptKey];
+          const scriptNames = {
+            1: 'Competências',
+            2: 'Tech Specs', 
+            3: 'RAG Database',
+            4: 'Fluxos',
+            5: 'N8N Workflows'
+          };
+
+          if (!scriptStatus) return null;
+
+          return (
+            <div key={num} className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                <span className="text-sm">Script {num}: {scriptNames[num as keyof typeof scriptNames]}</span>
+              </div>
+              <StatusBadge
+                status={getStatus(scriptStatus)}
+                label={scriptStatus.last_result === 'success' ? 'OK' : 'Aguardando'}
+                lastRun={scriptStatus.last_run}
+              />
+            </div>
+          );
+        })}
+
+        {/* Cascata */}
+        {execution_status.cascade && (
+          <div className="flex items-center justify-between py-2 border-t mt-3 pt-3">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span className="text-sm font-medium">Sistema Completo</span>
+            </div>
+            <StatusBadge
+              status={getStatus(execution_status.cascade)}
+              label={execution_status.cascade.last_result === 'success' ? 'Completo' : 'Pendente'}
+              lastRun={execution_status.cascade.last_run}
+            />
           </div>
         )}
       </div>
-      
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        <StatusBadge
-          status={getScriptStatus(status.biografia)}
-          label="Biografia"
-          lastRun={status.biografia.last_run}
-        />
-        <StatusBadge
-          status={getScriptStatus(status.script_1)}
-          label="Script 1"
-          lastRun={status.script_1.last_run}
-        />
-        <StatusBadge
-          status={getScriptStatus(status.script_2)}
-          label="Script 2"
-          lastRun={status.script_2.last_run}
-        />
-        <StatusBadge
-          status={getScriptStatus(status.script_3)}
-          label="Script 3"
-          lastRun={status.script_3.last_run}
-        />
-        <StatusBadge
-          status={getScriptStatus(status.script_4)}
-          label="Script 4"
-          lastRun={status.script_4.last_run}
-        />
-        <StatusBadge
-          status={getScriptStatus(status.script_5)}
-          label="Script 5"
-          lastRun={status.script_5.last_run}
-        />
-        <StatusBadge
-          status={getScriptStatus(status.cascade)}
-          label="Cascata"
-          lastRun={status.cascade.last_run}
-        />
-      </div>
 
-      {error && (
-        <div className="mt-3 text-xs text-amber-600 bg-amber-50 p-2 rounded">
-          <strong>Modo Desenvolvimento:</strong> Usando dados simulados (API não conectada)
-        </div>
-      )}
-
-      <div className="mt-3 text-xs text-gray-400">
+      <div className="mt-4 text-xs text-gray-500 text-center">
         Atualização automática a cada 2 segundos
       </div>
     </div>

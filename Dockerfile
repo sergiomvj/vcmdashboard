@@ -1,54 +1,50 @@
-# VCM Dashboard - Hybrid Dockerfile with Python Backend Support
+# VCM Dashboard - Production Ready Dockerfile
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install system dependencies including Python
+# Install system dependencies
 RUN apk add --no-cache \
     libc6-compat \
-    curl \
-    python3 \
-    py3-pip \
-    python3-dev \
-    build-base
-
-# Create symlink for python command
-RUN ln -sf python3 /usr/bin/python
+    curl
 
 # Accept build arguments
 ARG VCM_SUPABASE_URL
 ARG VCM_SUPABASE_ANON_KEY
 
-# Set environment variables
+# Set environment variables for production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_SUPABASE_URL=$VCM_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
 
-# Copy Python requirements and install Python dependencies
-COPY requirements.txt ./
-RUN pip3 install --no-cache-dir -r requirements.txt || echo "No Python requirements found - continuing with mock mode"
-
-# Copy package files first
+# Copy package files first for better caching
 COPY vcm-dashboard-real/package*.json ./
 
-# Install ALL dependencies (including devDependencies for build)
-RUN npm install --include=dev
+# Install dependencies with frozen lockfile
+RUN npm ci --only=production --no-audit
 
-# Copy all source files
+# Copy source code
 COPY vcm-dashboard-real/ ./
-
-# Note: AUTOMACAO scripts not included - using mock mode for APIs
-# To enable full Python functionality, uncomment and ensure AUTOMACAO/ exists:
-# COPY AUTOMACAO/ ../AUTOMACAO/
 
 # Build the application
 RUN npm run build
 
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Change ownership of the .next directory
+USER nextjs
+
 EXPOSE 80
 
 # Health check
-HEALTHCHECK CMD curl -f http://localhost:80/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:80/api/health || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:80/api/health || exit 1
 
-# Use standard Next.js start command
+# Use Next.js optimized start command
 CMD ["npm", "start"]
