@@ -450,9 +450,10 @@ ${generoPronome === "ele" ? "Seu" : "Sua"} principal objetivo é contribuir para
     /**
      * Salva personas e biografias na estrutura de pastas
      */
-    async savePersonasBiografias(personasConfig, outputPath) {
-        const outputDir = path.resolve(outputPath);
-        const personasScriptsDir = path.join(outputDir, "04_PERSONAS_SCRIPTS_1_2_3");
+    async savePersonasBiografias(personasConfig, outputPath = null) {
+        // Se outputPath não for fornecido, usar pasta AUTOMACAO como padrão
+        const baseDir = outputPath || path.join(__dirname, '..');
+        const personasScriptsDir = path.join(baseDir, "04_BIOS_PERSONAS");
         
         try {
             // Criar estrutura de pastas se não existir
@@ -491,7 +492,7 @@ ${generoPronome === "ele" ? "Seu" : "Sua"} principal objetivo é contribuir para
             }
             
             // Salvar configuração JSON
-            const configFilePath = path.join(outputDir, "personas_config.json");
+            const configFilePath = path.join(baseDir, "personas_config.json");
             await fs.writeFile(configFilePath, JSON.stringify(personasConfig, null, 2), 'utf8');
             
             console.log(`✅ Total de arquivos de biografia salvos: ${totalArquivosSalvos}`);
@@ -500,6 +501,7 @@ ${generoPronome === "ele" ? "Seu" : "Sua"} principal objetivo é contribuir para
             return {
                 success: true,
                 totalArquivos: totalArquivosSalvos,
+                diretorio: personasScriptsDir,
                 configPath: configFilePath
             };
             

@@ -20,7 +20,18 @@ export async function GET(
     }
 
     // Buscar personas nos diretórios de automação
-    const personasDir = path.join(process.cwd(), 'AUTOMACAO', '04_PERSONAS_COMPLETAS');
+    const personasDir = path.join(process.cwd(), 'AUTOMACAO', '04_BIOS_PERSONAS');
+    const personasConfigPath = path.join(process.cwd(), 'AUTOMACAO', 'personas_config.json');
+    
+    // Primeiro, carregar configuração das personas
+    let personasConfig: any = {};
+    try {
+      const configContent = await readFile(personasConfigPath, 'utf-8');
+      personasConfig = JSON.parse(configContent);
+    } catch (configError) {
+      console.warn('⚠️ Erro ao carregar personas_config.json:', configError);
+    }
+    
     const categorias = ['executivos', 'especialistas', 'assistentes'];
     
     let allPersonas: any[] = [];
@@ -30,27 +41,62 @@ export async function GET(
         const categoriaPath = path.join(personasDir, categoria);
         
         try {
-          const files = await readdir(categoriaPath);
-          const jsonFiles = files.filter(file => file.endsWith('.json') && file.includes(empresa_id.toLowerCase()));
+          const folders = await readdir(categoriaPath);
           
-          for (const file of jsonFiles) {
+          for (const folderName of folders) {
+            if (folderName === 'test_persona.md') continue; // Pular arquivo de teste
+            
+            const personaFolderPath = path.join(categoriaPath, folderName);
+            const bioFile = `${folderName}_bio.md`;
+            const bioFilePath = path.join(personaFolderPath, bioFile);
+            
             try {
-              const filePath = path.join(categoriaPath, file);
-              const content = await readFile(filePath, 'utf-8');
-              const persona = JSON.parse(content);
+              const bioContent = await readFile(bioFilePath, 'utf-8');
+              
+              // Extrair informações básicas do markdown
+              const lines = bioContent.split('\n');
+              const nomeCompleto = lines[0]?.replace('# ', '').split(' - ')[0] || folderName.replace(/_/g, ' ');
+              const cargo = lines[0]?.split(' - ')[1] || 'N/A';
+              
+              // Buscar dados estruturados no personas_config.json
+              let personaData = null;
+              if (personasConfig?.ceo && personasConfig.ceo.nomeCompleto === nomeCompleto) {
+                personaData = personasConfig.ceo;
+              } else if (personasConfig) {
+                // Buscar nas outras categorias
+                for (const [cat, personas] of Object.entries(personasConfig)) {
+                  if (typeof personas === 'object' && personas !== null && !Array.isArray(personas)) {
+                    for (const [id, persona] of Object.entries(personas as any)) {
+                      if ((persona as any)?.nomeCompleto === nomeCompleto) {
+                        personaData = persona;
+                        break;
+                      }
+                    }
+                  }
+                  if (personaData) break;
+                }
+              }
               
               allPersonas.push({
-                ...persona,
-                categoria,
-                file: file,
-                id: file.replace('.json', '')
+                id: folderName,
+                nome: nomeCompleto,
+                cargo: cargo,
+                categoria: categoria,
+                email: `${folderName.toLowerCase().replace(/_/g, '.')}@${empresa_id.toLowerCase()}.com`,
+                telefone: "+55-11-9999-" + Math.floor(1000 + Math.random() * 9000),
+                departamento: categoria.charAt(0).toUpperCase() + categoria.slice(1),
+                is_ceo: cargo === 'CEO',
+                biografia_markdown: bioContent,
+                dados_estruturados: personaData,
+                folder_path: folderName,
+                bio_file: bioFile
               });
-            } catch (parseError) {
-              console.warn(`⚠️ Erro ao processar ${file}:`, parseError);
+            } catch (bioError) {
+              console.warn(`⚠️ Erro ao ler biografia ${bioFile}:`, bioError);
             }
           }
         } catch (dirError) {
-          console.warn(`⚠️ Diretório ${categoria} não encontrado`);
+          console.warn(`⚠️ Diretório ${categoria} não encontrado:`, dirError);
         }
       }
 

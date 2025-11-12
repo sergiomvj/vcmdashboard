@@ -109,46 +109,68 @@ export function CompanyForm({ company, onClose }: CompanyFormProps) {
 
   const onSubmit = async (data: CompanyFormData) => {
     try {
-      const companyData = {
-        nome: data.nome,
-        codigo: data.codigo,
-        industria: data.industry,
-        dominio: data.dominio || '',
-        descricao: data.descricao,
-        pais: data.pais,
-        status: data.status,
-        idiomas: selectedLanguages,
-        total_personas: totalPersonas,
-        scripts_status: company?.scripts_status || {
-          rag: false,
-          fluxos: false,
-          workflows: false,
-          biografias: false,
-          tech_specs: false,
-          competencias: false
-        },
-        // Campos de personas mantidos para compatibilidade
-        ceo_gender: data.ceo_gender,
-        executives_male: data.executives_male,
-        executives_female: data.executives_female,
-        assistants_male: data.assistants_male,
-        assistants_female: data.assistants_female,
-        specialists_male: data.specialists_male,
-        specialists_female: data.specialists_female,
-      };
-
+      console.log('🚀 [FORM] Enviando dados para criação:', data);
+      
       if (isEditing && company) {
+        // Para edição, usar o hook direto (sem LLM)
         await updateCompanyMutation.mutateAsync({
           id: company.id,
-          ...companyData,
+          nome: data.nome,
+          codigo: data.codigo,
+          industria: data.industry,
+          dominio: data.dominio || '',
+          descricao: data.descricao,
+          pais: data.pais,
+          status: data.status,
+          idiomas: selectedLanguages,
+          total_personas: totalPersonas,
+          ceo_gender: data.ceo_gender,
+          executives_male: data.executives_male,
+          executives_female: data.executives_female,
+          assistants_male: data.assistants_male,
+          assistants_female: data.assistants_female,
+          specialists_male: data.specialists_male,
+          specialists_female: data.specialists_female,
         });
+        console.log('✅ Empresa atualizada com sucesso');
       } else {
-        await createCompanyMutation.mutateAsync(companyData);
+        // Para criação, usar API com LLM
+        const response = await fetch('/api/companies/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: data.nome,
+            codigo: data.codigo,
+            industry: data.industry,
+            dominio: data.dominio || '',
+            descricao: data.descricao,
+            pais: data.pais,
+            status: data.status,
+            idiomas: selectedLanguages,
+            ceo_gender: data.ceo_gender,
+            executives_male: data.executives_male,
+            executives_female: data.executives_female,
+            assistants_male: data.assistants_male,
+            assistants_female: data.assistants_female,
+            specialists_male: data.specialists_male,
+            specialists_female: data.specialists_female,
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Erro ao criar empresa');
+        }
+        
+        console.log('✅ Empresa criada com sucesso:', result);
       }
       
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar empresa:', error);
+      console.error('❌ Erro ao salvar empresa:', error);
+      // TODO: Mostrar erro na UI
+      alert(`Erro ao salvar empresa: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 

@@ -940,7 +940,8 @@ class WorkflowsN8NGenerator {
      */
     async processarWorkflowsN8N(empresaCodigo, inputPath = null, outputPath = null) {
         try {
-            const baseDir = outputPath || path.join(__dirname, '..', '..', 'output', `EMPRESA_${empresaCodigo.toUpperCase()}`);
+            // Usar pasta AUTOMACAO como base
+            const baseDir = path.join(__dirname, '..'); // AUTOMACAO/
             
             console.log(`🔍 Iniciando geração de workflows N8N para ${empresaCodigo.toUpperCase()}`);
 
@@ -1051,7 +1052,7 @@ class WorkflowsN8NGenerator {
             };
 
             // Criar estruturas individuais por persona
-            const personasDir = path.join(baseDir, '04_PERSONAS_SCRIPTS_1_2_3');
+            const personasDir = path.join(baseDir, '04_BIOS_PERSONAS');
             const categorias = await fs.readdir(personasDir);
 
             for (const categoria of categorias) {

@@ -714,7 +714,8 @@ class FluxosAnaliseGenerator {
      */
     async processarFluxosAnalise(empresaCodigo, inputPath = null, outputPath = null) {
         try {
-            const baseDir = outputPath || path.join(__dirname, '..', '..', 'output', `EMPRESA_${empresaCodigo.toUpperCase()}`);
+            // Usar pasta AUTOMACAO como base
+            const baseDir = path.join(__dirname, '..'); // AUTOMACAO/
             
             console.log(`🔍 Iniciando análise de fluxos para ${empresaCodigo.toUpperCase()}`);
 
@@ -788,7 +789,7 @@ class FluxosAnaliseGenerator {
             console.log(`   - ${fluxosAnalise.estatisticas.colaboracoes_identificadas} colaborações mapeadas`);
 
             // Criar estruturas individuais por persona
-            const personasDir = path.join(baseDir, '04_PERSONAS_SCRIPTS_1_2_3');
+            const personasDir = path.join(baseDir, '04_BIOS_PERSONAS');
             const categorias = await fs.readdir(personasDir);
 
             for (const categoria of categorias) {

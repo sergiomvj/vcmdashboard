@@ -363,8 +363,9 @@ class CompetenciasGenerator {
      */
     async processarPersonas(empresaCodigo, outputPath = null) {
         try {
-            const baseDir = outputPath || path.join(__dirname, '..', '..', 'output', `EMPRESA_${empresaCodigo.toUpperCase()}`);
-            const personasDir = path.join(baseDir, '04_PERSONAS_SCRIPTS_1_2_3');
+            // Buscar personas na pasta AUTOMACAO/04_BIOS_PERSONAS
+            const baseDir = path.join(__dirname, '..'); // AUTOMACAO/
+            const personasDir = path.join(baseDir, '04_BIOS_PERSONAS');
             
             console.log(`🔍 Processando personas em: ${personasDir}`);
 

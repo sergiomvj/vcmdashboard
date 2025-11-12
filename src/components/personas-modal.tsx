@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Empresa, Persona } from '@/lib/supabase';
-import { usePersonasByEmpresa } from '@/lib/supabase-hooks';
 import { X, User, Mail, MapPin, Briefcase, Calendar, Users } from 'lucide-react';
 
 interface PersonasModalProps {
@@ -12,32 +10,37 @@ interface PersonasModalProps {
 
 export function PersonasModal({ company, onClose }: PersonasModalProps) {
   const isOpen = !!company;
+  const [personas, setPersonas] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Mock data for development
-  const mockPersonas = [
-    {
-      id: '1',
-      nome_completo: 'Ana Silva',
-      cargo: 'CEO',
-      email: 'ana.silva@techvision.com',
-      localizacao: 'São Paulo, SP',
-      data_nascimento: '1985-03-15',
-      bio_profissional: 'CEO experiente com 15 anos de liderança em tecnologia'
-    },
-    {
-      id: '2', 
-      nome_completo: 'Carlos Santos',
-      cargo: 'CTO',
-      email: 'carlos.santos@techvision.com',
-      localizacao: 'Rio de Janeiro, RJ',
-      data_nascimento: '1982-07-22',
-      bio_profissional: 'CTO especialista em arquitetura de sistemas e inovação'
+  // Buscar personas reais quando o modal abrir
+  useEffect(() => {
+    if (!company || !isOpen) return;
+    
+    async function fetchPersonas() {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(`/api/personas/${company.codigo || company.id || 'ARVATEST'}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setPersonas(data.personas || []);
+        } else {
+          setError(data.message || 'Erro ao carregar personas');
+        }
+      } catch (err) {
+        setError('Erro de conexão');
+        console.error('Erro ao buscar personas:', err);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  ];
-  
-  const personas = mockPersonas;
-  const isLoading = false;
-  const error = null;
+    
+    fetchPersonas();
+  }, [company, isOpen]);
 
   if (!isOpen || !company) return null;
 
@@ -74,7 +77,7 @@ export function PersonasModal({ company, onClose }: PersonasModalProps) {
           ) : error ? (
             <div className="text-center py-12">
               <div className="text-red-600 mb-2">Erro ao carregar personas</div>
-              <p className="text-sm text-gray-600">Tente novamente mais tarde</p>
+              <p className="text-sm text-gray-600">{error}</p>
             </div>
           ) : !personas || personas.length === 0 ? (
             <div className="text-center py-12">
@@ -91,11 +94,14 @@ export function PersonasModal({ company, onClose }: PersonasModalProps) {
                   {/* Avatar e Nome */}
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                      {persona.nome_completo.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                      {(persona.nome || 'NN').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{persona.nome_completo}</h3>
+                      <h3 className="font-semibold text-gray-900">{persona.nome}</h3>
                       <p className="text-sm text-gray-600">{persona.cargo}</p>
+                      <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                        {persona.categoria}
+                      </div>
                     </div>
                   </div>
 
@@ -108,32 +114,29 @@ export function PersonasModal({ company, onClose }: PersonasModalProps) {
                     
                     <div className="flex items-center gap-2 text-gray-600">
                       <MapPin size={14} />
-                      <span>{persona.localizacao}</span>
+                      <span>{persona.telefone || 'N/A'}</span>
                     </div>
                     
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar size={14} />
-                      <span>Nascido em {new Date(persona.data_nascimento).toLocaleDateString('pt-BR')}</span>
+                      <Briefcase size={14} />
+                      <span>{persona.departamento}</span>
                     </div>
+                    
+                    {persona.is_ceo && (
+                      <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                        CEO
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Bio Profissional */}
-                  <div className="mt-3 pt-3 border-t">
-                    <p className="text-sm text-gray-600">{persona.bio_profissional}</p>
-                  </div>
-                  
-                  {/* Tipo baseado no cargo */}
-                  <div className="mt-3">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      persona.cargo.toLowerCase().includes('ceo')
-                        ? 'bg-purple-100 text-purple-800'
-                        : persona.cargo.toLowerCase().includes('cto') || persona.cargo.toLowerCase().includes('tech')
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {persona.cargo}
-                    </span>
-                  </div>
+                  {/* Bio ou informações adicionais */}
+                  {persona.biografia_markdown && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-xs text-gray-500">
+                        Clique para ver biografia completa
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -141,11 +144,11 @@ export function PersonasModal({ company, onClose }: PersonasModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t bg-gray-50">
+        <div className="px-6 py-4 bg-gray-50 border-t">
           <div className="flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Fechar
             </button>
