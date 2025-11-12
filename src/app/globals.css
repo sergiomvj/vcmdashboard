@@ -7,17 +7,42 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Força modo claro sempre - sobrescreve dark mode */
+* {
+  color-scheme: light;
+}
+
+html {
+  color-scheme: light;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: #171717 !important;
+  background: #ffffff !important;
   font-family: Arial, Helvetica, sans-serif;
+  color-scheme: light;
+}
+
+/* Garante que textos sejam sempre escuros */
+h1, h2, h3, h4, h5, h6, p, span, div {
+  color: inherit;
+}
+
+/* Reset de dark mode para componentes específicos */
+.bg-white {
+  background-color: #ffffff !important;
+}
+
+.text-gray-700 {
+  color: #374151 !important;
+}
+
+.text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.text-gray-500 {
+  color: #6b7280 !important;
 }
 
 @layer utilities {

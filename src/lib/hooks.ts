@@ -101,26 +101,42 @@ export const useGenerateBiografias = () => {
   
   return useMutation({
     mutationFn: async (request: any) => {
+      console.log('🔍 Enviando dados para API:', {
+        empresa_id: request.empresa_codigo || 'ARVATEST',
+        empresa_nome: request.empresa_nome,
+        script_type: 'biografia',
+        empresa_dados: request
+      });
+      
       // Usar API route local
       const response = await fetch('/api/automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          empresa_id: request.empresa_codigo,
+          empresa_id: request.empresa_codigo || 'ARVATEST',
+          empresa_nome: request.empresa_nome,
           script_type: 'biografia',
-          ...request
+          empresa_dados: request
         }),
       });
       
       if (!response.ok) {
-        throw new Error('Erro ao executar geração de biografias');
+        const errorData = await response.text();
+        console.error('❌ Erro na resposta:', errorData);
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log('✅ Resposta da API:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Sucesso na geração:', data);
       queryClient.invalidateQueries({ queryKey: ['execution-status'] });
       queryClient.invalidateQueries({ queryKey: ['outputs'] });
+    },
+    onError: (error) => {
+      console.error('❌ Erro na mutation:', error);
     },
   });
 };

@@ -8,6 +8,7 @@ import { Play, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 export function BiografiaForm() {
   const [formData, setFormData] = useState<BiografiaRequest>({
+    empresa_codigo: 'ARVATEST',
     empresa_nome: 'TechVision Solutions',
     empresa_industry: 'tecnologia',
     empresa_pais: 'Brasil',

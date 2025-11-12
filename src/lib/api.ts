@@ -7,6 +7,7 @@ export interface NacionalidadePercentual {
 }
 
 export interface BiografiaRequest {
+  empresa_codigo?: string;
   empresa_nome: string;
   empresa_industry: string;
   empresa_pais: string;
