@@ -28,23 +28,23 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">VCM Dashboard</h1>
-              <p className="text-gray-600">Virtual Company Manager - Interface Real</p>
+              <h1 className="text-2xl font-bold text-gray-900" style={{color: '#111827'}}>VCM Dashboard</h1>
+              <p className="text-gray-600" style={{color: '#4B5563'}}>Virtual Company Manager - Interface Real</p>
             </div>
             
             <div className="flex items-center gap-3">
               {healthLoading ? (
-                <div className="flex items-center gap-2 text-gray-500">
+                <div className="flex items-center gap-2 text-gray-500" style={{color: '#6B7280'}}>
                   <Activity size={20} className="animate-pulse" />
                   <span>Verificando...</span>
                 </div>
               ) : healthData && healthData.status === 'healthy' ? (
-                <div className="flex items-center gap-2 text-green-600">
+                <div className="flex items-center gap-2 text-green-600" style={{color: '#059669'}}>
                   <CheckCircle size={20} />
                   <span>API Conectada</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-blue-600">
+                <div className="flex items-center gap-2 text-blue-600" style={{color: '#2563EB'}}>
                   <AlertTriangle size={20} />
                   <span>Modo Desenvolvimento</span>
                 </div>

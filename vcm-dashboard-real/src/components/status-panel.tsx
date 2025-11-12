@@ -55,11 +55,11 @@ export function StatusPanel() {
       <div className="bg-white rounded-lg border p-4">
         <div className="flex items-center gap-2 text-gray-600 mb-3">
           <Activity size={20} />
-          <h3 className="font-medium">Status dos Scripts</h3>
+          <h3 className="font-medium" style={{color: '#374151'}}>Status dos Scripts</h3>
         </div>
         <div className="flex items-center justify-center py-8">
           <Loader2 className="animate-spin text-gray-400" size={32} />
-          <span className="ml-2 text-gray-500">Carregando status...</span>
+          <span className="ml-2 text-gray-500" style={{color: '#6B7280'}}>Carregando status...</span>
         </div>
       </div>
     );
