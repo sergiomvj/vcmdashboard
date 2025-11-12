@@ -77,6 +77,10 @@ export function StatusPanel() {
   };
 
   const status = statusData || mockData;
+  
+  // Detect if using real data or mock
+  const isUsingRealData = statusData?._debug?.status === 'API_WORKING_REAL';
+  const companiesCount = statusData?._debug?.empresas_count || 0;
 
   const getScriptStatus = (script: ScriptStatus): 'running' | 'success' | 'error' | 'idle' | 'pending' => {
     if (script.running) return 'running';
@@ -90,6 +94,23 @@ export function StatusPanel() {
       <div className="flex items-center gap-2 text-gray-600 mb-3">
         <Activity size={20} />
         <h3 className="font-medium" style={{color: '#374151'}}>Status dos Scripts</h3>
+      </div>
+      
+      {/* Indicador de Modo de Dados */}
+      <div className={`mb-4 p-2 rounded text-xs ${isUsingRealData 
+        ? 'bg-green-50 text-green-700 border border-green-200' 
+        : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}>
+        {isUsingRealData ? (
+          <div className="flex items-center gap-2">
+            <CheckCircle size={14} />
+            <span>📊 <strong>Dados Reais Conectados</strong> - {companiesCount} empresa(s) no Supabase</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} />
+            <span>🔧 <strong>Modo Mock</strong> - Dados simulados (API desconectada)</span>
+          </div>
+        )}
       </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

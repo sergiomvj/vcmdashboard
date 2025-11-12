@@ -68,16 +68,16 @@ export const useExecutionStatus = () => {
         console.log('🔍 Hook: Response status:', response.status);
         
         if (!response.ok) {
-          console.warn('🚨 Hook: Response não OK, usando mock');
-          return mockExecutionStatus;
+          console.warn('🚨 Hook: Response não OK, usando dados MOCK como fallback');
+          return { ...mockExecutionStatus, _fallback_mode: 'API_ERROR' };
         }
         
         const data = await response.json();
-        console.log('✅ Hook: Dados recebidos:', data);
+        console.log('✅ Hook: Dados REAIS recebidos do Supabase:', data);
         return data;
       } catch (error) {
-        console.error('🚨 Hook: Erro ao buscar status:', error);
-        return mockExecutionStatus;
+        console.error('🚨 Hook: Erro ao buscar status, usando dados MOCK:', error);
+        return { ...mockExecutionStatus, _fallback_mode: 'NETWORK_ERROR' };
       }
     },
     refetchInterval: 2000,

@@ -12,7 +12,6 @@ import { EmpresasPage } from '@/components/empresas-page';
 import { ConfiguracoesPage } from '@/components/configuracoes-page';
 import { ObjetivosMetas } from '@/components/ObjetivosMetas';
 import { AuditoriaSystem } from '@/components/AuditoriaSystem';
-import DebugPanel from '@/components/debug-panel';
 import { Activity, AlertTriangle, CheckCircle, Target, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -90,9 +89,6 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Debug Panel - Temporário para diagnóstico */}
-        <DebugPanel />
-        
         {activeTab === 'dashboard' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             {/* Coluna Principal */}
