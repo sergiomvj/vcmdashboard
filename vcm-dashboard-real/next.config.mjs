@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for Docker
+  output: 'standalone',
+  
   // Disable x-powered-by header for security
   poweredByHeader: false,
   
@@ -15,21 +18,22 @@ const nextConfig = {
   
   // Optimize images
   images: {
-    domains: ['localhost'],
-    unoptimized: process.env.NODE_ENV === 'development'
+    unoptimized: true, // Better for containers
   },
   
-  // Enable experimental features for better performance (disabled for Docker compatibility)
+  // Optimize images
+  images: {
+    unoptimized: true, // Better for containers
+  },
+  
+  // Disabled experimental features for stability
   experimental: {
-    // Enable modern build optimizations
-    optimizeCss: false,  // Disabled for Docker build stability
-    // Improve cold start performance
-    webpackBuildWorker: false,  // Disabled - can cause issues in containers
+    optimizeCss: false,
+    webpackBuildWorker: false,
   },
   
   // Webpack optimizations
   webpack: (config, { isServer }) => {
-    // Reduce bundle size
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
