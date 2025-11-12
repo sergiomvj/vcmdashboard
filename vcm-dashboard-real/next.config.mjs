@@ -19,12 +19,12 @@ const nextConfig = {
     unoptimized: process.env.NODE_ENV === 'development'
   },
   
-  // Enable experimental features for better performance
+  // Enable experimental features for better performance (disabled for Docker compatibility)
   experimental: {
     // Enable modern build optimizations
-    optimizeCss: true,
+    optimizeCss: false,  // Disabled for Docker build stability
     // Improve cold start performance
-    webpackBuildWorker: true,
+    webpackBuildWorker: false,  // Disabled - can cause issues in containers
   },
   
   // Webpack optimizations
