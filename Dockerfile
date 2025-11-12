@@ -8,24 +8,28 @@ RUN apk add --no-cache \
     libc6-compat \
     curl
 
-# Accept build arguments
-ARG VCM_SUPABASE_URL
-ARG VCM_SUPABASE_ANON_KEY
-
-# Set environment variables for production
+# Set environment variables for production (without sensitive data)
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_SUPABASE_URL=$VCM_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$VCM_SUPABASE_ANON_KEY
 
 # Copy package files first for better caching
 COPY vcm-dashboard-real/package*.json ./
 
-# Install dependencies with frozen lockfile
-RUN npm ci --only=production --no-audit
+# Install dependencies with frozen lockfile (including dev dependencies for build)
+RUN npm ci --no-audit
 
 # Copy source code
 COPY vcm-dashboard-real/ ./
+
+# Accept build arguments for environment variables
+ARG VCM_SUPABASE_URL
+ARG VCM_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# Set build-time environment variables
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 # Build the application
 RUN npm run build
@@ -34,15 +38,17 @@ RUN npm run build
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Change ownership of the .next directory
+# Change ownership of app directory
+RUN chown -R nextjs:nodejs /app
+
 USER nextjs
 
 EXPOSE 80
 
-# Health check
+# Health check (single instance)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:80/api/health || exit 1
-# Health check
+# Health check (single instance)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:80/api/health || exit 1
 
