@@ -5,6 +5,7 @@ import { useHealthCheck } from '@/lib/hooks';
 import { StatusPanel } from '@/components/status-panel';
 import { BiografiaForm } from '@/components/biografia-form';
 import { ScriptControls } from '@/components/script-controls';
+import { ScriptsNodeJSPage } from '@/components/scripts-nodejs-page';
 import { OutputsPanel } from '@/components/outputs-panel';
 import { RAGPanel } from '@/components/rag-panel';
 import { TabNavigation, TabType } from '@/components/tab-navigation';
@@ -12,7 +13,7 @@ import { EmpresasPage } from '@/components/empresas-page';
 import { ConfiguracoesPage } from '@/components/configuracoes-page';
 import { ObjetivosMetas } from '@/components/ObjetivosMetas';
 import { AuditoriaSystem } from '@/components/AuditoriaSystem';
-import { Activity, AlertTriangle, CheckCircle, Target, Shield } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
@@ -92,10 +93,18 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Coluna Principal */}
             <div className="lg:col-span-2 space-y-8">
+              {/* Painel de Status Geral */}
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg">
+                <h2 className="text-2xl font-bold mb-2">Dashboard Principal</h2>
+                <p className="text-blue-100">
+                  Visão geral do sistema VCM - Para executar scripts Node.js, use a aba &quot;Scripts Node.js&quot;
+                </p>
+              </div>
+              
               {/* Formulário de Biografias */}
               <BiografiaForm />
               
-              {/* Controles de Scripts */}
+              {/* Controles de Scripts (Python - Legacy) */}
               <ScriptControls />
               
               {/* Sistema RAG */}
@@ -111,6 +120,10 @@ export default function Dashboard() {
               <OutputsPanel />
             </div>
           </div>
+        )}
+
+        {activeTab === 'scripts-nodejs' && (
+          <ScriptsNodeJSPage />
         )}
 
         {activeTab === 'empresas' && (

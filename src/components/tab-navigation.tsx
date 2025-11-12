@@ -1,8 +1,8 @@
 'use client';
 
-import { Building2, Settings, LayoutDashboard, Target, Shield } from 'lucide-react';
+import { Building2, Settings, LayoutDashboard, Target, Shield, Code } from 'lucide-react';
 
-export type TabType = 'dashboard' | 'empresas' | 'objetivos-metas' | 'auditoria' | 'configuracoes';
+export type TabType = 'dashboard' | 'empresas' | 'objetivos-metas' | 'auditoria' | 'configuracoes' | 'scripts-nodejs';
 
 interface TabNavigationProps {
   activeTab: TabType;
@@ -15,7 +15,13 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
       id: 'dashboard' as TabType,
       label: 'Dashboard',
       icon: LayoutDashboard,
-      description: 'Visão geral e execução de scripts'
+      description: 'Visão geral do sistema'
+    },
+    {
+      id: 'scripts-nodejs' as TabType,
+      label: 'Scripts Node.js',
+      icon: Code,
+      description: 'Executar scripts de automação Node.js'
     },
     {
       id: 'empresas' as TabType,
