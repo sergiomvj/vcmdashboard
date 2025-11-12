@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable standalone output for Docker deployment
-  output: 'standalone',
+  // Remove standalone for now - might be causing issues
+  // output: 'standalone',
+  
+  // Force cache busting
+  generateEtags: false,
   
   // Disable x-powered-by header for security
   poweredByHeader: false,
@@ -14,6 +17,20 @@ const nextConfig = {
   // Disable TypeScript errors during build (for faster production builds)
   typescript: {
     ignoreBuildErrors: true,
+  },
+  
+  // Server configuration
+  async rewrites() {
+    return [
+      {
+        source: '/health',
+        destination: '/api/health',
+      },
+      {
+        source: '/status',
+        destination: '/api/status',
+      },
+    ]
   },
   
   // Optimize images

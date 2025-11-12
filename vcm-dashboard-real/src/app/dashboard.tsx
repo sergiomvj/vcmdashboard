@@ -30,6 +30,7 @@ export default function Dashboard() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900" style={{color: '#111827'}}>VCM Dashboard</h1>
               <p className="text-gray-600" style={{color: '#4B5563'}}>Virtual Company Manager - Interface Real</p>
+              <p className="text-xs text-gray-400" style={{color: '#9CA3AF'}}>Build: {new Date().toISOString().slice(0,16)}</p>
             </div>
             
             <div className="flex items-center gap-3">

@@ -45,10 +45,10 @@ COPY vcm-dashboard-real/ ./
 # Build the application
 RUN npm run build
 
-EXPOSE 3000
+EXPOSE 80
 
 # Health check
-HEALTHCHECK CMD curl -f http://localhost:3000/api/health || exit 1
+HEALTHCHECK CMD curl -f http://localhost:80/api/health || exit 1
 
-# Use the correct command for standalone build
-CMD ["node", ".next/standalone/server.js"]
+# Use standard Next.js start command
+CMD ["npm", "start"]
