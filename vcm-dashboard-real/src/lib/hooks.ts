@@ -4,18 +4,29 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Mock data para desenvolvimento quando API não está disponível
 const mockExecutionStatus = {
-  biografia: { running: false, last_run: null, last_result: null },
-  script_1: { running: false, last_run: null, last_result: null },
-  script_2: { running: false, last_run: null, last_result: null },
-  script_3: { running: false, last_run: null, last_result: null },
-  script_4: { running: false, last_run: null, last_result: null },
-  script_5: { running: false, last_run: null, last_result: null },
-  cascade: { running: false, last_run: null, last_result: null },
+  biografia: { running: false, last_run: new Date().toISOString(), last_result: 'success' },
+  script_1: { running: false, last_run: null, last_result: 'idle' },
+  script_2: { running: false, last_run: null, last_result: 'idle' },
+  script_3: { running: false, last_run: null, last_result: 'idle' },
+  script_4: { running: false, last_run: null, last_result: 'idle' },
+  script_5: { running: false, last_run: null, last_result: 'idle' },
+  cascade: { running: false, last_run: null, last_result: 'idle' },
+  _info: {
+    mode: 'mock',
+    timestamp: new Date().toISOString(),
+    environment: typeof window !== 'undefined' ? 'client' : 'server'
+  }
 };
 
 const mockOutputs = {
-  outputs: [],
-  count: 0
+  outputs: [
+    { name: 'exemplo_output.json', size: '1.2KB', modified: new Date().toISOString() }
+  ],
+  count: 1,
+  _info: {
+    mode: 'mock',
+    timestamp: new Date().toISOString()
+  }
 };
 
 // Hook para health check
@@ -44,17 +55,35 @@ export const useExecutionStatus = () => {
     queryKey: ['execution-status'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/status');
+        console.log('🔍 Hook: Fazendo fetch para /api/status');
+        const response = await fetch('/api/status', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+        });
+        console.log('🔍 Hook: Response status:', response.status);
+        
         if (!response.ok) {
-          return mockExecutionStatus; // Usar mock se API falhar
+          console.warn('🚨 Hook: Response não OK, usando mock');
+          return mockExecutionStatus;
         }
-        return await response.json();
-      } catch {
-        return mockExecutionStatus; // Usar mock se API falhar
+        
+        const data = await response.json();
+        console.log('✅ Hook: Dados recebidos:', data);
+        return data;
+      } catch (error) {
+        console.error('🚨 Hook: Erro ao buscar status:', error);
+        return mockExecutionStatus;
       }
     },
     refetchInterval: 2000,
     retry: false,
+    staleTime: 0, // Sempre considerar dados como stale
+    gcTime: 0, // Não manter cache
   });
 };
 
