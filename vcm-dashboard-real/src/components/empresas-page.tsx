@@ -145,6 +145,31 @@ export function EmpresasPage({
     setEditingPersona(null);
   };
 
+  const handleViewBio = (persona: any) => {
+    console.log('Visualizando biografia de:', persona.nome_completo);
+    // Por enquanto só log, posteriormente pode abrir modal específico ou navegar
+  };
+
+  const handleViewCompetencias = (persona: any) => {
+    console.log('Visualizando competências de:', persona.nome_completo);
+  };
+
+  const handleViewTechSpecs = (persona: any) => {
+    console.log('Visualizando tech specs de:', persona.nome_completo);
+  };
+
+  const handleViewRAG = (persona: any) => {
+    console.log('Visualizando RAG de:', persona.nome_completo);
+  };
+
+  const handleViewFluxos = (persona: any) => {
+    console.log('Visualizando fluxos de:', persona.nome_completo);
+  };
+
+  const handleViewWorkflows = (persona: any) => {
+    console.log('Visualizando workflows de:', persona.nome_completo);
+  };
+
   const handleSavePersona = (personaData: any) => {
     console.log('Salvando persona:', personaData);
     // Aqui seria implementada a lógica de salvamento
@@ -397,41 +422,49 @@ export function EmpresasPage({
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => handleEditPersona(persona)}
+                                  className="bg-green-50 hover:bg-green-100 border-green-200"
+                                >
+                                  ✏️ Editar
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleViewBio(persona)}
                                 >
                                   Bio
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleEditPersona(persona)}
+                                  onClick={() => handleViewCompetencias(persona)}
                                 >
                                   Competências
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleEditPersona(persona)}
+                                  onClick={() => handleViewTechSpecs(persona)}
                                 >
                                   Tech Specs
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleEditPersona(persona)}
+                                  onClick={() => handleViewRAG(persona)}
                                 >
                                   RAG
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleEditPersona(persona)}
+                                  onClick={() => handleViewFluxos(persona)}
                                 >
                                   Fluxos
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleEditPersona(persona)}
+                                  onClick={() => handleViewWorkflows(persona)}
                                 >
                                   Workflows
                                 </Button>
