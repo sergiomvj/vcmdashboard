@@ -112,10 +112,6 @@ export const useRunScript = () => {
 export const useRunCascade = () => {
   const queryClient = useQueryClient();
   
-// Hook para executar cascata
-export const useRunCascade = () => {
-  const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async () => {
       const response = await fetch('/api/automation', {
@@ -133,7 +129,6 @@ export const useRunCascade = () => {
       queryClient.invalidateQueries({ queryKey: ['outputs'] });
     },
   });
-};
 };
 
 // Hook para listar outputs
