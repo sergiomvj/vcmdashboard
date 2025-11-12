@@ -52,7 +52,7 @@ export function BiografiaForm() {
 
   return (
     <div className="bg-white rounded-lg border p-6">
-      <h3 className="text-lg font-semibold mb-4">Gerar Biografias de Personas</h3>
+            <h3 className="text-lg font-semibold mb-4">Geração de Empresa Virtual</h3>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
