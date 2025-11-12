@@ -15,7 +15,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Copy package files first for better caching
 COPY vcm-dashboard-real/package*.json ./
 
-# Install dependencies with frozen lockfile (including dev dependencies for build)
+# Install dependencies with frozen lockfile
 RUN npm ci --no-audit
 
 # Copy source code
