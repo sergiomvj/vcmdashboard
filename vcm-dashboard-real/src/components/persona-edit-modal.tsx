@@ -15,6 +15,7 @@ interface PersonaEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave?: (personaData: any) => void;
+  initialTab?: string;
 }
 
 // Mock data para demonstração
@@ -66,9 +67,9 @@ const mockPersonaData = {
   }
 };
 
-export function PersonaEditModal({ persona, isOpen, onClose, onSave }: PersonaEditModalProps) {
+export function PersonaEditModal({ persona, isOpen, onClose, onSave, initialTab = 'biografia' }: PersonaEditModalProps) {
   const [personaData, setPersonaData] = useState(mockPersonaData);
-  const [activeTab, setActiveTab] = useState('biografia');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleSave = () => {

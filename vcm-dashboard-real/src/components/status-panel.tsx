@@ -71,7 +71,7 @@ export function StatusPanel() {
   }
 
   // Compatibilidade: se os dados vêm diretamente ou aninhados em execution_status
-  const execution_status = statusData.execution_status || statusData;
+  const execution_status = (statusData as any).execution_status || statusData;
 
   const getStatus = (scriptStatus: ScriptStatus) => {
     if (scriptStatus.running) return 'running';

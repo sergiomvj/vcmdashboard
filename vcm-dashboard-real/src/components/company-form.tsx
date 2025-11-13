@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { useCreateEmpresa, useUpdateEmpresa } from '@/lib/supabase-hooks';
 import { Empresa } from '@/lib/supabase';
 import { X, Save, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const companySchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
@@ -30,7 +31,7 @@ type CompanyFormData = z.infer<typeof companySchema>;
 
 interface CompanyFormProps {
   company?: Empresa | null;
-  onClose: () => void;
+  onClose: (createdCompany?: Empresa) => void;
 }
 
 const INDUSTRIES = [
@@ -65,6 +66,7 @@ export function CompanyForm({ company, onClose }: CompanyFormProps) {
   
   const createCompanyMutation = useCreateEmpresa();
   const updateCompanyMutation = useUpdateEmpresa();
+  const { toast } = useToast();
   
   const {
     register,
@@ -138,17 +140,29 @@ export function CompanyForm({ company, onClose }: CompanyFormProps) {
       };
 
       if (isEditing && company) {
-        await updateCompanyMutation.mutateAsync({
+        const updatedCompany = await updateCompanyMutation.mutateAsync({
           id: company.id,
           ...companyData,
         });
+        toast({
+          title: 'Empresa atualizada com sucesso!',
+          description: `As informações da empresa "${updatedCompany.nome}" foram salvas.`
+        });
+        onClose(updatedCompany);
       } else {
-        await createCompanyMutation.mutateAsync(companyData);
+        const createdCompany = await createCompanyMutation.mutateAsync(companyData);
+        toast({
+          title: 'Empresa criada com sucesso!',
+          description: `A empresa "${createdCompany.nome}" foi adicionada ao sistema.`
+        });
+        onClose(createdCompany);
       }
-      
-      onClose();
     } catch (error) {
       console.error('Erro ao salvar empresa:', error);
+      toast({
+        title: isEditing ? 'Erro ao atualizar empresa' : 'Erro ao criar empresa',
+        description: error instanceof Error ? error.message : 'Erro desconhecido. Tente novamente.'
+      });
     }
   };
 
@@ -168,7 +182,7 @@ export function CompanyForm({ company, onClose }: CompanyFormProps) {
           {isEditing ? 'Editar Empresa' : 'Nova Empresa'}
         </h2>
         <button
-          onClick={onClose}
+          onClick={() => onClose()}
           className="p-2 hover:bg-gray-100 rounded-md"
         >
           <X size={20} />
@@ -398,7 +412,7 @@ export function CompanyForm({ company, onClose }: CompanyFormProps) {
           </button>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onClose()}
             className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Cancelar

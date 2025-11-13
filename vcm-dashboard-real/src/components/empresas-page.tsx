@@ -1,106 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Edit, Trash2, Users, Play, Eye, Building2, Database, GitBranch } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Edit, Trash2, Users, Play, Eye, Building2, Database, GitBranch, Loader2 } from 'lucide-react';
 import { CompanyForm } from './company-form';
 import { PersonasModal } from './personas-modal';
 import { PersonaEditModal } from './persona-edit-modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useEmpresas, usePersonasByEmpresa, useDeleteEmpresa } from '@/lib/supabase-hooks';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
 
-// Mock data para demonstração
-const mockEmpresas = [
-  {
-    id: '1',
-    nome: 'TechVision Solutions',
-    industry: 'Tecnologia',
-    pais: 'Brasil',
-    descricao: 'Empresa de soluções tecnológicas inovadoras focada em transformação digital',
-    tamanho: 'media',
-    cultura: 'hibrida',
-    status: 'ativa',
-    created_at: '2024-11-01',
-    personas_count: 20,
-    scripts_executados: 3
-  },
-  {
-    id: '2',
-    nome: 'HealthCare Plus',
-    industry: 'Saúde',
-    pais: 'Estados Unidos',
-    descricao: 'Plataforma inovadora de telemedicina e gestão hospitalar',
-    tamanho: 'grande',
-    cultura: 'formal',
-    status: 'ativa',
-    created_at: '2024-10-15',
-    personas_count: 35,
-    scripts_executados: 5
-  },
-  {
-    id: '3',
-    nome: 'EduTech Academy',
-    industry: 'Educação',
-    pais: 'Canadá', 
-    descricao: 'Academia online de tecnologia com cursos interativos',
-    tamanho: 'pequena',
-    cultura: 'casual',
-    status: 'processando',
-    created_at: '2024-11-05',
-    personas_count: 12,
-    scripts_executados: 1
-  }
-];
-
-const mockPersonas = [
-  {
-    id: '1',
-    empresa_id: '1',
-    nome_completo: 'Ana Silva',
-    cargo: 'CEO',
-    categoria: 'executivos',
-    email: 'ana.silva@techvision.com',
-    status: 'ativo'
-  },
-  {
-    id: '2', 
-    empresa_id: '1',
-    nome_completo: 'Carlos Santos',
-    cargo: 'CTO',
-    categoria: 'executivos', 
-    email: 'carlos.santos@techvision.com',
-    status: 'ativo'
-  },
-  {
-    id: '3',
-    empresa_id: '1', 
-    nome_completo: 'Maria Costa',
-    cargo: 'Desenvolvedora Senior',
-    categoria: 'especialistas',
-    email: 'maria.costa@techvision.com',
-    status: 'ativo'
-  },
-  {
-    id: '4',
-    empresa_id: '2',
-    nome_completo: 'Dr. Roberto Lima',
-    cargo: 'Chief Medical Officer',
-    categoria: 'executivos',
-    email: 'roberto.lima@healthcare.com',
-    status: 'ativo'
-  },
-  {
-    id: '5',
-    empresa_id: '2',
-    nome_completo: 'Patricia Oliveira',
-    cargo: 'Tech Lead',
-    categoria: 'especialistas',
-    email: 'patricia.oliveira@healthcare.com',
-    status: 'ativo'
-  }
-];
-
+// DADOS REAIS DO SUPABASE - SEM MOCKS! (Fixed TypeScript errors)
 export function EmpresasPage({ 
   onEmpresaSelect, 
   selectedEmpresaId 
@@ -112,14 +24,23 @@ export function EmpresasPage({
   const [editingCompany, setEditingCompany] = useState<any>(null);
   const [viewingPersonas, setViewingPersonas] = useState<any>(null);
   const [editingPersona, setEditingPersona] = useState<any>(null);
-  const [selectedEmpresa, setSelectedEmpresa] = useState<string>(mockEmpresas[0].id);
+  const [editingPersonaTab, setEditingPersonaTab] = useState<string>('biografia');
   const [executingScript, setExecutingScript] = useState<number | null>(null);
   const [executingCascade, setExecutingCascade] = useState(false);
   
-  // Usar mock data em desenvolvimento
-  const companies = mockEmpresas;
-  const isLoading = false;
-  const error = null;
+  // Usar dados reais do Supabase
+  const { data: companies = [], isLoading, error } = useEmpresas();
+  const [selectedEmpresa, setSelectedEmpresa] = useState<string>('');
+  const { data: personasEmpresa = [] } = usePersonasByEmpresa(selectedEmpresa, !!selectedEmpresa);
+  const deleteEmpresaMutation = useDeleteEmpresa();
+  const { toast } = useToast();
+
+  // Atualizar selectedEmpresa quando companies carregam ou quando uma nova empresa é criada
+  useEffect(() => {
+    if (companies.length > 0 && !selectedEmpresa) {
+      setSelectedEmpresa(companies[0].id);
+    }
+  }, [companies, selectedEmpresa]);
 
   const handleEdit = (company: any) => {
     setEditingCompany(company);
@@ -127,47 +48,50 @@ export function EmpresasPage({
   };
 
   const handleDelete = async (company: any) => {
-    if (window.confirm(`Tem certeza que deseja excluir a empresa "${company.nome}"?`)) {
-      alert('Funcionalidade de exclusão será implementada em breve.');
+    if (window.confirm(`⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nTem certeza que deseja excluir a empresa "${company.nome}"?\n\nTodos os dados relacionados (personas, biografias, etc.) serão perdidos permanentemente.`)) {
+      try {
+        await deleteEmpresaMutation.mutateAsync(company.id);
+        
+        // Se a empresa excluída estava selecionada, seleciona outra
+        if (selectedEmpresa === company.id && companies.length > 1) {
+          const remainingCompanies = companies.filter(c => c.id !== company.id);
+          setSelectedEmpresa(remainingCompanies[0].id);
+        } else if (companies.length === 1) {
+          setSelectedEmpresa('');
+        }
+        
+        toast({ 
+          title: 'Empresa excluída com sucesso!',
+          description: `A empresa "${company.nome}" foi removida do sistema.`
+        });
+      } catch (error) {
+        console.error('Erro ao excluir empresa:', error);
+        toast({ 
+          title: 'Erro ao excluir empresa',
+          description: error instanceof Error ? error.message : 'Erro desconhecido. Tente novamente.'
+        });
+      }
     }
   };
 
-  const handleCloseForm = () => {
+  const handleCloseForm = (createdCompany?: any) => {
     setShowForm(false);
     setEditingCompany(null);
+    
+    // Se uma nova empresa foi criada, seleciona ela automaticamente
+    if (createdCompany && createdCompany.id) {
+      setSelectedEmpresa(createdCompany.id);
+    }
   };
 
-  const handleEditPersona = (persona: any) => {
+  const handleEditPersona = (persona: any, tab: string = 'biografia') => {
     setEditingPersona(persona);
+    setEditingPersonaTab(tab);
   };
 
   const handleClosePersonaEdit = () => {
     setEditingPersona(null);
-  };
-
-  const handleViewBio = (persona: any) => {
-    console.log('Visualizando biografia de:', persona.nome_completo);
-    // Por enquanto só log, posteriormente pode abrir modal específico ou navegar
-  };
-
-  const handleViewCompetencias = (persona: any) => {
-    console.log('Visualizando competências de:', persona.nome_completo);
-  };
-
-  const handleViewTechSpecs = (persona: any) => {
-    console.log('Visualizando tech specs de:', persona.nome_completo);
-  };
-
-  const handleViewRAG = (persona: any) => {
-    console.log('Visualizando RAG de:', persona.nome_completo);
-  };
-
-  const handleViewFluxos = (persona: any) => {
-    console.log('Visualizando fluxos de:', persona.nome_completo);
-  };
-
-  const handleViewWorkflows = (persona: any) => {
-    console.log('Visualizando workflows de:', persona.nome_completo);
+    setEditingPersonaTab('biografia');
   };
 
   const handleSavePersona = (personaData: any) => {
@@ -230,7 +154,6 @@ export function EmpresasPage({
   };
 
   const empresaSelecionada = companies.find(e => e.id === selectedEmpresa);
-  const personasEmpresa = mockPersonas.filter(p => p.empresa_id === selectedEmpresa);
 
   if (isLoading) {
     return (
@@ -247,10 +170,53 @@ export function EmpresasPage({
           <div className="ml-3">
             <h3 className="text-sm font-medium text-red-800">Erro ao carregar empresas</h3>
             <div className="mt-2 text-sm text-red-700">
-              Erro desconhecido
+              {error?.message || 'Erro desconhecido'}
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (companies.length === 0) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Empresas Virtuais</h2>
+            <p className="text-gray-600">Gerencie suas empresas virtuais, personas e execute scripts</p>
+          </div>
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => setShowForm(true)}
+          >
+            <Plus size={20} className="mr-2" />
+            Nova Empresa
+          </Button>
+        </div>
+
+        {/* Empty state */}
+        <div className="text-center py-12">
+          <Building2 size={64} className="mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma empresa criada</h3>
+          <p className="text-gray-600 mb-4">Comece criando sua primeira empresa virtual</p>
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => setShowForm(true)}
+          >
+            <Plus size={20} className="mr-2" />
+            Criar Primeira Empresa
+          </Button>
+        </div>
+
+        {/* Modal */}
+        {showForm && (
+          <CompanyForm
+            company={editingCompany}
+            onClose={handleCloseForm}
+          />
+        )}
       </div>
     );
   }
@@ -335,9 +301,14 @@ export function EmpresasPage({
                       e.stopPropagation();
                       handleDelete(company);
                     }}
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
+                    disabled={deleteEmpresaMutation.isPending}
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 disabled:opacity-50"
                   >
-                    <Trash2 size={12} />
+                    {deleteEmpresaMutation.isPending ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={12} />
+                    )}
                   </Button>
                 </div>
               </button>
@@ -412,59 +383,57 @@ export function EmpresasPage({
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <h4 className="font-semibold">{persona.nome_completo}</h4>
-                                <p className="text-sm text-gray-600">{persona.cargo}</p>
-                                <p className="text-xs text-gray-500">{persona.email}</p>
+                                <h4 className="font-semibold">{persona.full_name}</h4>
+                                <p className="text-sm text-gray-600">{persona.role}</p>
+                                <p className="text-xs text-gray-500">{persona.department}</p>
                               </div>
                               
                               <div className="flex gap-2 flex-wrap">
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleEditPersona(persona)}
-                                  className="bg-green-50 hover:bg-green-100 border-green-200"
-                                >
-                                  ✏️ Editar
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleViewBio(persona)}
+                                  onClick={() => handleEditPersona(persona, 'biografia')}
+                                  className="bg-blue-50 hover:bg-blue-100 border-blue-200"
                                 >
                                   Bio
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleViewCompetencias(persona)}
+                                  onClick={() => handleEditPersona(persona, 'competencias')}
+                                  className="bg-green-50 hover:bg-green-100 border-green-200"
                                 >
                                   Competências
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleViewTechSpecs(persona)}
+                                  onClick={() => handleEditPersona(persona, 'tech')}
+                                  className="bg-purple-50 hover:bg-purple-100 border-purple-200"
                                 >
                                   Tech Specs
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleViewRAG(persona)}
+                                  onClick={() => handleEditPersona(persona, 'rag')}
+                                  className="bg-orange-50 hover:bg-orange-100 border-orange-200"
                                 >
                                   RAG
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleViewFluxos(persona)}
+                                  onClick={() => handleEditPersona(persona, 'fluxos')}
+                                  className="bg-pink-50 hover:bg-pink-100 border-pink-200"
                                 >
                                   Fluxos
                                 </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleViewWorkflows(persona)}
+                                  onClick={() => handleEditPersona(persona, 'workflows')}
+                                  className="bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
                                 >
                                   Workflows
                                 </Button>
@@ -544,8 +513,8 @@ export function EmpresasPage({
                       {personasEmpresa.map((persona) => (
                         <Card key={persona.id}>
                           <CardHeader>
-                            <CardTitle className="text-base">{persona.nome_completo}</CardTitle>
-                            <CardDescription>{persona.cargo}</CardDescription>
+                            <CardTitle className="text-base">{persona.full_name}</CardTitle>
+                            <CardDescription>{persona.role}</CardDescription>
                           </CardHeader>
                           <CardContent>
                             <div className="space-y-2">
@@ -603,6 +572,7 @@ export function EmpresasPage({
           isOpen={!!editingPersona}
           onClose={handleClosePersonaEdit}
           onSave={handleSavePersona}
+          initialTab={editingPersonaTab}
         />
       )}
     </div>

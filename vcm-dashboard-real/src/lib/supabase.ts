@@ -41,6 +41,11 @@ export interface Empresa {
   specialists_male?: number;
   specialists_female?: number;
   nationalities?: { tipo: string; percentual: number }[];
+  // Additional properties for UI display
+  personas_count?: number;
+  scripts_executados?: number;
+  tamanho?: string;
+  cultura?: string;
 }
 
 export interface SystemConfiguration {
